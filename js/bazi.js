@@ -532,46 +532,7 @@ function countWuXing(yearPillar, monthPillar, dayPillar, hourPillar) {
  * 阳年男 + 阴年女 → 顺行
  * 阴年男 + 阳年女 → 逆行
  */
-function calculateQiYunAge(birthYear, birthMonth, birthDay, isForward) {
-    const jieQiList = getJieQiDates(birthYear);
-    // 出生日期（用日期即可，无需精确到小时）
-    const birthDate = new Date(birthYear, birthMonth - 1, birthDay);
 
-    if (isForward) {
-        // 顺行：找出生日期之后的第一个节
-        for (const jq of jieQiList) {
-            if (jq.date > birthDate) {
-                const diffDays = (jq.date - birthDate) / (1000 * 60 * 60 * 24);
-                return Math.max(1, Math.round(diffDays / 3 * 10) / 10); // 保留一位小数
-            }
-        }
-        // 如果当年所有节都已过（极小概率），取来年立春
-        const nextYearJieQi = getJieQiDates(birthYear + 1);
-        if (nextYearJieQi.length > 0) {
-            const diffDays = (nextYearJieQi[0].date - birthDate) / (1000 * 60 * 60 * 24);
-            return Math.max(1, Math.round(diffDays / 3 * 10) / 10);
-        }
-        return 5; // 保底
-    } else {
-        // 逆行：找出生日期之前的第一个节
-        for (let i = jieQiList.length - 1; i >= 0; i--) {
-            if (jieQiList[i].date < birthDate) {
-                const diffDays = (birthDate - jieQiList[i].date) / (1000 * 60 * 60 * 24);
-                return Math.max(1, Math.round(diffDays / 3 * 10) / 10);
-            }
-        }
-        // 如果出生日期在当年所有节之前，取上年最后一个小寒
-        // 小寒是1月6日前后，属于 birthYear 的节
-        // 如果出生在1月1日-1月5日之间，需要查出生前一年的节
-        const prevYearJieQi = getJieQiDates(birthYear - 1);
-        const lastJq = prevYearJieQi[prevYearJieQi.length - 1]; // 小寒（下一年1月）
-        if (lastJq) {
-            const diffDays = (birthDate - lastJq.date) / (1000 * 60 * 60 * 24);
-            return Math.max(1, Math.round(diffDays / 3 * 10) / 10);
-        }
-        return 5; // 保底
-    }
-}
 
 /**
  * 计算大运
@@ -584,62 +545,107 @@ function calculateQiYunAge(birthYear, birthMonth, birthDay, isForward) {
  * @param {number} birthDay    - 出生公历日
  * @returns {Object} { list, isForward, startAge }
  */
-function calculateDaYun(monthPillar, yearPillar, gender, birthYear, birthMonth, birthDay) {
-    // 年干阴阳：甲(0)丙(2)戊(4)庚(6)壬(8)为阳，乙丁己辛癸为阴
-    const yearGanYinYang = yearPillar.ganIndex % 2; // 0=阳干, 1=阴干
+function calculateDaYun(monthPillar, yearPillar, gender, birthYear, birthMonth, birthDay, birthHour) {
+    const yearGanIsYang = yearPillar.ganIndex % 2 === 0;
     const isMale = gender === 'male';
+    const isForward = (yearGanIsYang && isMale) || (!yearGanIsYang && !isMale);
 
-    // 排运方向：
-    // 阳年男命 + 阴年女命 → 顺行（月柱往后排）
-    // 阴年男命 + 阳年女命 → 逆行（月柱往前排）
-    const isForward = (yearGanYinYang === 0 && isMale) || (yearGanYinYang === 1 && !isMale);
+    // 出生日期时间：小时折合为天的小数部分
+    const birthHourNum = (typeof birthHour === 'number') ? birthHour : 0;
+    const birthDateTime = birthDateToDecimal(birthYear, birthMonth, birthDay, birthHourNum);
 
-    // 精确计算起运年龄
-    const qiYunAge = calculateQiYunAge(birthYear, birthMonth, birthDay, isForward);
+    let targetJQ = null, diffDays = 0;
+
+    if (isForward) {
+        for (const yr of [birthYear, birthYear + 1]) {
+            const jqList = getJieQiDates(yr);
+            for (const jq of jqList) {
+                const jqDT = birthDateToDecimal(jq.date.getFullYear(), jq.date.getMonth() + 1, jq.date.getDate(), 0);
+                if (jqDT > birthDateTime) { targetJQ = jq; diffDays = jqDT - birthDateTime; break; }
+            }
+            if (targetJQ) break;
+        }
+    } else {
+        // 逆排：从出生日往前找最近的节
+        // 需要查当前年份和上一年份的节气
+        for (const yr of [birthYear, birthYear - 1]) {
+            const jqList = getJieQiDates(yr);
+            for (let i = jqList.length - 1; i >= 0; i--) {
+                const jqDT = birthDateToDecimal(jqList[i].date.getFullYear(), jqList[i].date.getMonth() + 1, jqList[i].date.getDate(), 0);
+                if (jqDT < birthDateTime) {
+                    targetJQ = jqList[i];
+                    diffDays = birthDateTime - jqDT;
+                    break;
+                }
+            }
+            if (targetJQ) break;
+        }
+    }
+
+    if (!targetJQ) {
+        diffDays = isForward ? 30 : 30;
+    }
+
+    // 起运年龄：3天折1岁
+    const qiYunAge = Math.max(0.1, Math.round(diffDays / 3 * 10) / 10);
+
+    // ===== 传统换算：整岁 + 余天×4=月 + 余时辰×10=天 =====
+    // 将天数差拆分为整3天组(岁) + 余天 + 余时辰
+    const totalHours = diffDays * 24;
+    const threeDayHours = 3 * 24;
+    const wholeYears = Math.floor(totalHours / threeDayHours);
+    const remainHours = totalHours - wholeYears * threeDayHours;
+    const remainDays = Math.floor(remainHours / 24);
+    const remainHourRemainder = remainHours - remainDays * 24;
+    const remainShiChen = Math.floor(remainHourRemainder / 2); // 1时辰=2小时
+
+    const calcMonths = remainDays * 4;           // 1天 = 4个月
+    const calcDays = remainShiChen * 10;         // 1时辰 = 10天
+
+    const timingInfo = {
+        years: wholeYears,
+        months: calcMonths,
+        days: calcDays,
+        totalQiYunAge: qiYunAge
+    };
 
     // 生成大运列表（8步）
-    // 显示标签：9岁、19岁、29岁…（十年分界，1-9岁为小运不计入大运）
-    // 年份从起运整岁开始，例如起运8岁→2012年开始，但显示标签仍是"9岁"
-    const qiYunRounded = Math.ceil(qiYunAge); // 整岁起运年份起点
     const daYunList = [];
     for (let i = 0; i < 8; i++) {
         let ganIdx, zhiIdx;
-        const step = i + 1; // 第1步大运从月柱的下/上一位开始
-    
         if (isForward) {
-            ganIdx = (monthPillar.ganIndex + step) % 10;
-            zhiIdx = (monthPillar.zhiIndex + step) % 12;
+            ganIdx = (monthPillar.ganIndex + (i + 1)) % 10;
+            zhiIdx = (monthPillar.zhiIndex + (i + 1)) % 12;
         } else {
-            ganIdx = (monthPillar.ganIndex - step + 100) % 10;
-            zhiIdx = (monthPillar.zhiIndex - step + 120) % 12;
+            ganIdx = (monthPillar.ganIndex - (i + 1) + 100) % 10;
+            zhiIdx = (monthPillar.zhiIndex - (i + 1) + 120) % 12;
         }
-    
-        // 显示标签（固定十年分界：9、19、29…）
-        const displayAge = 9 + i * 10;
-        const displayLabel = `${displayAge}`;
-    
-        // 年份范围：从起运整岁开始，每步10年
-        const stepStartYear = birthYear + qiYunRounded + i * 10;
-        const stepEndYear = birthYear + qiYunRounded + (i + 1) * 10 - 1;
-    
+        // 虚岁标签：传统命理以大运起始虚岁显示，实岁+1后向上取整
+        const showAge = Math.ceil(qiYunAge + 1) + i * 10;
+        const startYearExact = birthYear + qiYunAge + i * 10;
+        const endYearExact = birthYear + qiYunAge + (i + 1) * 10;
+
         daYunList.push({
-            gan: TIAN_GAN[ganIdx],
-            zhi: DI_ZHI[zhiIdx],
-            ganIndex: ganIdx,
-            zhiIndex: zhiIdx,
-            displayAge: displayLabel,
-            startAge: displayAge,
-            endAge: displayAge + 10,
-            startYear: stepStartYear,
-            endYear: stepEndYear
+            gan: TIAN_GAN[ganIdx], zhi: DI_ZHI[zhiIdx],
+            ganIndex: ganIdx, zhiIndex: zhiIdx,
+            displayAge: String(showAge),
+            startYear: Math.round(startYearExact),
+            endYear: Math.floor(endYearExact)
         });
     }
 
     return {
         list: daYunList,
         isForward: isForward,
-        qiYunAge: Math.round(qiYunAge * 10) / 10
+        qiYunAge: qiYunAge,
+        timingInfo: timingInfo,
+        targetJieQi: targetJQ ? targetJQ.name : null
     };
+}
+
+/** 将年月日时转为自 epoch 起的天数值（用于精确计算日差） */
+function birthDateToDecimal(year, month, day, hour) {
+    return new Date(year, month - 1, day, hour || 0, 0, 0).getTime() / (1000 * 60 * 60 * 24);
 }
 
 /**
@@ -2103,6 +2109,67 @@ function analyzeWealth(bazi, gender) {
         caiAdvice = '当前阶段求稳为主，不宜冒进。建议先借力发展——与' + helpWX + '五行属性的人合作，或从' + helpWX + '相关行业切入，能让财运更加顺畅。待大运走强时再大规模投入也不迟。';
     }
 
+    // --- 财富方位与城市 ---
+    const wxDirection = { '金':'西','木':'东','水':'北','火':'南','土':'中' };
+    const wxDirMap = {
+        '金': { dir:'西方', d:'西', cities: ['成都','重庆','西安','昆明','贵阳','兰州','银川','西宁','拉萨','乌鲁木齐'] },
+        '木': { dir:'东方', d:'东', cities: ['上海','苏州','杭州','南京','宁波','无锡','合肥','福州','厦门','济南'] },
+        '水': { dir:'北方', d:'北', cities: ['北京','天津','沈阳','大连','哈尔滨','长春','石家庄','太原','呼和浩特','青岛'] },
+        '火': { dir:'南方', d:'南', cities: ['深圳','广州','东莞','佛山','珠海','海口','三亚','南宁','长沙','武汉'] },
+        '土': { dir:'中原', d:'中', cities: ['郑州','洛阳','开封','武汉','长沙','南昌','合肥','西安','石家庄','太原'] }
+    };
+    // 不利方位：克财星的五行方位
+    const wxKe = { '木':'金','火':'水','土':'木','金':'火','水':'土' };
+    const killerWX = wxKe[caiWX];
+    const badDirInfo = wxDirMap[killerWX] || wxDirMap['金'];
+    const goodDirInfo = wxDirMap[caiWX] || wxDirMap['土'];
+
+    // 适合发展的城市（取前5个）
+    const goodCities = goodDirInfo.cities.slice(0, 5);
+    const badCities = badDirInfo.cities.slice(0, 3);
+
+    // --- 财富量级估算（基于身强+财星数量） ---
+    const wealthLevels = [];
+    if (wangStatus === '身强' && caiCount >= 3) {
+        wealthLevels.push('你有很强的赚钱能力和财运基础，只要方向对，**千万级别**的财富完全在你的射程之内。关键是找准赛道、持续深耕十年以上。');
+    } else if (wangStatus === '身强' && caiCount >= 1) {
+        wealthLevels.push('你的命格底子扎实，加上财星有根，**三五百万**这个量级对你来说只是时间问题。做好规划、保持专注，财富会自然积累。');
+    } else if (wangStatus === '身强' || (wangStatus === '中和偏强' && caiCount >= 2)) {
+        wealthLevels.push('你的底子不错，财气也够用——**百万级别**的财富是完全可以期待的。抓住大运走强的年份，三五年就能看到明显变化。');
+    } else if (wangStatus === '中和偏强' || (wangStatus === '中和偏弱' && caiCount >= 2)) {
+        wealthLevels.push('你的财运需要一点时间酝酿，但只要坚持走对方向，**几十万到百万**的积累是完全现实的。稳扎稳打比什么都重要。');
+    } else if (caiCount >= 1) {
+        wealthLevels.push('你的财运偏稳，不太适合冒险——但好在有财星在命，**几十万**的稳定积累不成问题。建议把重心放在主业深耕上，别频繁换赛道。');
+    } else {
+        wealthLevels.push('你的命局财星不显，但这不代表没有财运——很多人都是靠食伤生财（用才华赚钱）后来居上的。关键在于找到你真正热爱且擅长的事，**一步一步积累，一样能达到让别人羡慕的财富水平**。');
+    }
+
+    // 第二段补充建议
+    if (wangStatus === '身强') {
+        wealthLevels.push('你的抗压能力强，适合做一些需要长期投入、厚积薄发的事情。别太在意短期盈亏，把眼光放长，十年后的你会感谢现在沉得住气的自己。');
+    } else if (wangStatus === '中和偏弱' || wangStatus === '身弱') {
+        wealthLevels.push('你的优势不在于一个人硬扛——找到靠谱的搭档、好的平台，借力发展会让你走得更快。团队作战比单打独斗更适合你。');
+    }
+
+    // --- 大白话财运总结 ---
+    const summaryParts = [];
+    if (caiCount >= 2) {
+        summaryParts.push('你八字里财星出现了' + caiCount + '次');
+    } else if (caiCount === 1) {
+        summaryParts.push('你命里有财星在' + (caiPositions[0] ? caiPositions[0].slice(0, 2) : '命') + '位');
+    } else {
+        summaryParts.push('命局财星不显，但你有生财的能力');
+    }
+
+    if (wangStatus === '身强' || wangStatus === '中和偏强') {
+        summaryParts.push('自身能量足，赚钱有底气');
+    } else {
+        summaryParts.push('适合与人合作，借力发展');
+    }
+    summaryParts.push(goodDirInfo.dir + '方位是财库方向')
+
+    const wealthSummary = summaryParts.join('，') + '。总之一句话——你的财运是有根的，别着急，好事在后头。';
+
     return {
         caiWX: caiWX,
         caiCount: caiCount,
@@ -2111,7 +2178,15 @@ function analyzeWealth(bazi, gender) {
         wangScore: wangScore,
         wangStatus: wangStatus,
         caiWanxi: caiWanxi,
-        caiAdvice: caiAdvice
+        caiAdvice: caiAdvice,
+        goodDirection: goodDirInfo.dir,
+        goodCities: goodCities,
+        badDirection: badDirInfo.dir,
+        badCities: badCities,
+        wealthLevels: wealthLevels,
+        wealthSummary: wealthSummary,
+        goodDirShort: goodDirInfo.d,
+        badDirShort: badDirInfo.d
     };
 }
 
@@ -2125,7 +2200,7 @@ function analyzeFortune(bazi, gender) {
 
     // 计算大运
     const daYun = calculateDaYun(bazi.month, bazi.year, gender,
-        bazi.birthDate.year, bazi.birthDate.month, bazi.birthDate.day);
+        bazi.birthDate.year, bazi.birthDate.month, bazi.birthDate.day, bazi.birthDate.hour);
 
     // 找出当前大运
     let currentDY = null;

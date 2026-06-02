@@ -83,41 +83,29 @@ function render(data) {
     _dayunShenSha = [];
     _liunianShenSha = [];
     renderShenSha();
-    // 有神煞时自动展开抽屉
-    if (data.shenSha.length > 0) {
-        document.getElementById('shenshaDetailSection').classList.add('drawer-open');
-    }
 
     // 五行
     renderWuXing(bazi.wuXingCount);
-    document.getElementById('wuxingSection').classList.add('drawer-open');
 
-    // 袁天罡称骨
-    renderChengGu(bazi, _params.month, _params.day);
-    document.getElementById('chengguSection').classList.add('drawer-open');
+    // 日主解析 · 滴天髓
+    renderRiZhuJieXi(bazi.day.gan);
+
+    // 专业解读不自动打开（默认关闭）
 
     // 真太阳时
     renderSolarTime(_params.year, _params.month, _params.day, _params.hour);
 
-    // 日主解析 · 滴天髓
-    renderRiZhuJieXi(bazi.day.gan);
-    document.getElementById('rizhuSection').classList.add('drawer-open');
+    // 日主性格（大白话）
+    renderCharacter(bazi);
+    document.getElementById('characterSection').classList.add('drawer-open');
 
-    // 夫妻宫
-    renderFuQi(bazi);
-    document.getElementById('fuqiSection').classList.add('drawer-open');
-
-    // 配偶年龄
-    renderSpouseAge(bazi, _params.gender);
-    document.getElementById('spouseAgeSection').classList.add('drawer-open');
+    // 婚姻感情（夫妻宫+配偶年龄合并）
+    renderMarriage(bazi, _params.gender);
+    document.getElementById('marriageSection').classList.add('drawer-open');
 
     // 父母关系
     renderParents(bazi, _params.gender);
     document.getElementById('parentsSection').classList.add('drawer-open');
-
-    // 日主性格
-    renderCharacter(bazi);
-    document.getElementById('characterSection').classList.add('drawer-open');
 
     // 财运分析
     renderWealth(bazi, _params.gender);
@@ -130,14 +118,22 @@ function render(data) {
     // 学业分析
     renderStudy(bazi);
     document.getElementById('studySection').classList.add('drawer-open');
+
+    // 神煞统计
+    document.getElementById('shenshaCount').textContent = '（共' + data.shenSha.length + '项）';
 }
 
 // ==================== 大运渲染 ====================
 function renderDaYun(daYunData, dayGan, currentYear) {
     const table = document.getElementById('dayunTable');
     const dirLabel = daYunData.isForward ? '顺行' : '逆行';
-    document.getElementById('dayunDirection').textContent =
-        `${dirLabel} · ${daYunData.qiYunAge}岁起运`;
+
+    const ti = daYunData.timingInfo || {};
+    const timingStr = (ti.years > 0 ? ti.years + '年' : '') + ti.months + '个月' + ti.days + '天';
+    const jqName = daYunData.targetJieQi ? '（距' + daYunData.targetJieQi + '）' : '';
+    document.getElementById('dayunDirection').innerHTML =
+        dirLabel + ' · 出生后' + timingStr + '0时起运' + jqName +
+        '<br><small style="color:var(--text-dim)">大运虚岁标签：' + daYunData.list[0]?.displayAge + '岁起</small>';
 
     let html = '';
     daYunData.list.forEach((dy, i) => {
@@ -483,21 +479,19 @@ function renderShenSha() {
 
 // 合并所有神煞（四柱+大运+流年）并更新accordion
 function refreshShenShaDetail() {
-    const section = document.getElementById('shenshaDetailSection');
     const accordion = document.getElementById('shenshaAccordion');
-    const countEl = document.getElementById('shenshaCount');
 
     // 合并所有神煞：四柱 + 大运 + 流年
     const allList = [..._nativeShenSha, ..._dayunShenSha, ..._liunianShenSha];
 
     if (allList.length === 0) {
-        section.style.display = 'none';
+        accordion.innerHTML = '<div style="text-align:center;padding:10px;color:var(--text-dim);font-size:13px">命局清净，暂无特殊神煞</div>';
         return;
     }
 
-    section.style.display = '';
-    section.classList.add('drawer-open');
-    countEl.textContent = `（共${allList.length}个）`;
+    // 更新计数
+    const countEl = document.getElementById('shenshaCount');
+    if (countEl) countEl.textContent = '（共' + allList.length + '项）';
 
     // 按类型排序：吉神 > 中性 > 凶煞
     const typeOrder = { 'ji-shen': 0, 'zhong': 1, 'ji': 2 };
@@ -647,93 +641,63 @@ function renderRiZhuJieXi(dayGan) {
 }
 
 // ==================== 夫妻宫渲染 ====================
-function renderFuQi(bazi) {
-    const pei = window.BaZiCalculator.analyzePei(bazi);
-    const el = document.getElementById('fuqiContent');
-    if (!el) return;
 
-    const cangInfo = pei.cangGan.map((g) => {
-        const wx = window.BaZiCalculator.WU_XING[g];
-        return `<span class="fq-cang-gan" style="color:${WX_COLORS[wx] || '#b8a878'}">${g}</span>`;
-    }).join('<span class="fq-cang-sep">·</span>');
-
-    const posClass = { '正官':'fq-ji','七杀':'fq-ji','正印':'fq-ji','偏印':'fq-ji','食神':'fq-shang','伤官':'fq-shang','正财':'fq-cai','偏财':'fq-cai','比肩':'fq-bi','劫财':'fq-bi' };
-    const cls = posClass[pei.mainSS] || 'fq-bi';
-
-    el.innerHTML = `
-        <div class="fq-header">
-            <span class="fq-pillar-name">日柱</span>
-            <span class="fq-pillar-gz">${bazi.day.gan}${bazi.day.zhi}</span>
-        </div>
-        <div class="fq-zhi-info">
-            <span class="fq-label">地支藏干</span>
-            <span class="fq-cang">${cangInfo}</span>
-        </div>
-        <div class="fq-ss-badge">
-            夫妻宫十神：<strong class="fq-ss-tag ${cls}">${pei.mainSS}</strong>
-        </div>
-        <div class="fq-trait">
-            <div class="fq-trait-icon">🏹</div>
-            <div class="fq-trait-text">${pei.trait}</div>
-        </div>
-        <div class="fq-trait fq-looks">
-            <div class="fq-trait-icon">👤</div>
-            <div class="fq-trait-text">${pei.looks}</div>
-        </div>
-    `;
-}
-
-// ==================== 配偶年龄渲染 ====================
-function renderSpouseAge(bazi, gender) {
+// ==================== 婚姻感情渲染（大白话） ====================
+function renderMarriage(bazi, gender) {
     const pei = window.BaZiCalculator.analyzePei(bazi);
     const ageInfo = window.BaZiCalculator.calculateSpouseAge(bazi, pei.mainSS);
-    const el = document.getElementById('spouseAgeContent');
+    const el = document.getElementById('marriageContent');
     if (!el) return;
 
     const maxCount = Math.max(ageInfo.bigCount, ageInfo.smallCount, ageInfo.sameCount);
     const barW = (v) => maxCount > 0 ? Math.round(v / maxCount * 100) : 0;
 
-    el.innerHTML = `
-        <div class="sa-result">
-            <span class="sa-badge">${ageInfo.result}</span>
-            <span class="sa-desc">${ageInfo.desc}</span>
-        </div>
-        <div class="sa-bars">
-            <div class="sa-bar-item">
-                <span class="sa-bar-label">大十神<span class="sa-bar-sub">官杀·印星</span></span>
-                <div class="sa-bar-track"><div class="sa-bar-fill sa-big" style="width:${barW(ageInfo.bigCount)}%"></div></div>
-                <span class="sa-bar-num">${ageInfo.bigCount}</span>
-            </div>
-            <div class="sa-bar-item">
-                <span class="sa-bar-label">小十神<span class="sa-bar-sub">食伤·财星</span></span>
-                <div class="sa-bar-track"><div class="sa-bar-fill sa-small" style="width:${barW(ageInfo.smallCount)}%"></div></div>
-                <span class="sa-bar-num">${ageInfo.smallCount}</span>
-            </div>
-            <div class="sa-bar-item">
-                <span class="sa-bar-label">比劫<span class="sa-bar-sub">同龄倾向</span></span>
-                <div class="sa-bar-track"><div class="sa-bar-fill sa-same" style="width:${barW(ageInfo.sameCount)}%"></div></div>
-                <span class="sa-bar-num">${ageInfo.sameCount}</span>
-            </div>
-        </div>
-        <div class="sa-detail">${ageInfo.detail}</div>
-        <div class="sa-loc-row">
-            <div class="sa-loc-card">
-                <span class="sa-loc-icon">📍</span>
-                <div class="sa-loc-body">
-                    <div class="sa-loc-title">配偶远近 <span class="sa-loc-tag">${ageInfo.distanceLabel}</span></div>
-                    <div class="sa-loc-text">${ageInfo.distanceText}</div>
-                </div>
-            </div>
-            <div class="sa-loc-card">
-                <span class="sa-loc-icon">💞</span>
-                <div class="sa-loc-body">
-                    <div class="sa-loc-title">认识方式 <span class="sa-loc-tag">${ageInfo.meetingLabel}</span></div>
-                    <div class="sa-loc-text">${ageInfo.meetingText}</div>
-                </div>
-            </div>
-        </div>
-    `;
+    // 大白话翻译夫妻宫信息
+    const spouseDescMap = {
+        '比肩': '另一半性格直爽独立，两人相处像朋友一样平等',
+        '劫财': '两人个性都挺要强，偶尔会争个高低，但也更有活力',
+        '食神': '另一半温和体贴，懂得享受生活，会把日子过得很舒服',
+        '伤官': '另一半聪明有才华，想法独特，有时候说话很直接',
+        '正财': '另一半务实顾家，重视经济基础，是个踏实过日子的人',
+        '偏财': '另一半大方开朗，社交能力强，朋友多，也舍得花钱',
+        '正官': '另一半做事规矩有担当，可能比较传统，责任感强',
+        '七杀': '另一半果敢有魄力，不按常理出牌，可能给你带来惊喜也带来挑战',
+        '正印': '另一半像你的温暖港湾，包容体贴，会照顾人',
+        '偏印': '另一半思想独立深沉，可能有些神秘，不太轻易表达'
+    };
+    const spouseDesc = spouseDescMap[pei.mainSS] || '两人缘法很奇特，相遇后会慢慢发现彼此的闪光点';
+
+    const wx = window.BaZiCalculator.WU_XING;
+    const cangInfo = pei.cangGan.map((g) => {
+        return '<span class="fq-cang-gan" style="color:' + (WX_COLORS[wx[g]] || '#b8a878') + '">' + g + '</span>';
+    }).join('<span class="fq-cang-sep">·</span>');
+
+    // 远近+认识方式翻译
+    const distMap = { '同城/同乡':'另一半很可能是本地人','异地':'另一半来自不同城市','远方':'另一半来自很远的地方' };
+    const meetMap = { '自由恋爱':'应该是在工作或社交中自然而然认识的','媒人介绍':'很可能是通过朋友或家人介绍认识的','巧合相遇':'缘分来得比较巧妙，可能是在旅途中偶遇' };
+
+    el.innerHTML = ''
+        + '<div class="mp-couple">'
+        +   '<span class="mp-day-gz">' + bazi.day.gan + bazi.day.zhi + '</span>'
+        +   '<span class="mp-day-label">（你的日柱·夫妻宫）</span>'
+        + '</div>'
+        + '<div class="mp-spouse-desc">' + spouseDesc + '</div>'
+        + '<div class="mp-section-title">对方样貌特点</div>'
+        + '<div class="mp-looks">' + pei.looks + '</div>'
+        + '<div class="mp-section-title">年龄差距</div>'
+        + '<div class="mp-age-badge">' + ageInfo.result + '</div>'
+        + '<div class="mp-age-desc">' + ageInfo.desc + '</div>'
+        + '<div class="mp-bars">'
+        +   '<div class="sa-bar-item"><span class="sa-bar-label">年长<span class="sa-bar-sub">官杀·印星</span></span><div class="sa-bar-track"><div class="sa-bar-fill sa-big" style="width:' + barW(ageInfo.bigCount) + '%"></div></div><span class="sa-bar-num">' + ageInfo.bigCount + '</span></div>'
+        +   '<div class="sa-bar-item"><span class="sa-bar-label">年轻的<span class="sa-bar-sub">食伤·财星</span></span><div class="sa-bar-track"><div class="sa-bar-fill sa-small" style="width:' + barW(ageInfo.smallCount) + '%"></div></div><span class="sa-bar-num">' + ageInfo.smallCount + '</span></div>'
+        +   '<div class="sa-bar-item"><span class="sa-bar-label">同龄的<span class="sa-bar-sub">比劫</span></span><div class="sa-bar-track"><div class="sa-bar-fill sa-same" style="width:' + barW(ageInfo.sameCount) + '%"></div></div><span class="sa-bar-num">' + ageInfo.sameCount + '</span></div>'
+        + '</div>'
+        + '<div class="mp-loc-row">'
+        +   '<div class="sa-loc-card"><span class="sa-loc-icon">📍</span><div class="sa-loc-body"><div class="sa-loc-title">你们离得远吗：<b>' + ageInfo.distanceLabel + '</b></div><div class="sa-loc-text">' + (distMap[ageInfo.distanceLabel] || ageInfo.distanceText) + '</div></div></div>'
+        +   '<div class="sa-loc-card"><span class="sa-loc-icon">💞</span><div class="sa-loc-body"><div class="sa-loc-title">可能怎么认识：<b>' + ageInfo.meetingLabel + '</b></div><div class="sa-loc-text">' + (meetMap[ageInfo.meetingLabel] || ageInfo.meetingText) + '</div></div></div>'
+        + '</div>';
 }
+
 
 // ==================== 父母关系渲染 ====================
 function renderParents(bazi, gender) {
@@ -768,114 +732,112 @@ function renderCharacter(bazi) {
     const ch = window.BaZiCalculator.analyzeCharacter(bazi);
     const el = document.getElementById('characterContent');
     if (!el) return;
-
-    const wxColor = { '木':'#4CAF50','火':'#F44336','土':'#CD853F','金':'#FFD700','水':'#2196F3' };
     const wxEmoji = { '木':'🌳','火':'🔥','土':'⛰️','金':'⚔️','水':'💧' };
+    const wxColor = { '木':'#4CAF50','火':'#F44336','土':'#CD853F','金':'#FFD700','水':'#2196F3' };
 
-    // 优点 / 缺点
-    const strengths = ch.strengths.split('、').slice(0, 3);
-    const weaknesses = ch.weaknesses.split('、').slice(0, 3);
+    // 五行大白话
+    const wxStories = {
+        '木': '像一棵树——天生有一股向上生长的劲头，善良正直，内心有原则', '火': '像一团火——热情洋溢，行动力强，走到哪都能带动气氛', '土': '像大地一样——踏实稳重，靠谱实在，是朋友眼中的定心丸', '金': '像一块精钢——果断利落，是非分明，做事讲究效率', '水': '像水一样——聪明灵活，适应力强，能根据环境随机应变'
+    };
 
-    const ssTags = ch.topSSDetail.map(t => `
-        <span class="ch-ss-tag">${t.name}×${t.count}</span>
-    `).join('');
-
-    el.innerHTML = `
-        <div class="ch-header">
-            <span class="ch-gan-badge" style="background:${wxColor[ch.wuXing]}22;border-color:${wxColor[ch.wuXing]};color:${wxColor[ch.wuXing]}">
-                ${wxEmoji[ch.wuXing]} ${ch.dayGan}${ch.wuXing}日主
-            </span>
-            <div class="ch-ss-row">${ssTags}</div>
-        </div>
-        <div class="ch-dual">
-            <div class="ch-card ch-strength">
-                <div class="ch-card-icon">✅</div>
-                <div class="ch-card-body">
-                    <div class="ch-card-title">优势面</div>
-                    <div class="ch-card-text">${ch.nature.positive}</div>
-                </div>
-            </div>
-            <div class="ch-card ch-weakness">
-                <div class="ch-card-icon">⚠️</div>
-                <div class="ch-card-body">
-                    <div class="ch-card-title">注意面</div>
-                    <div class="ch-card-text">${ch.nature.negative}</div>
-                </div>
-            </div>
-        </div>
-        <div class="ch-composite">
-            <div class="ch-comp-label">综合画像</div>
-            <div class="ch-comp-text">${ch.nature.xingxiang}</div>
-        </div>
-        <div class="ch-comp-text" style="margin-top:12px;">${ch.composite}</div>
-    `;
+    el.innerHTML = ''
+        + '<div style="text-align:center;margin-bottom:18px">'
+        +   '<span style="display:inline-block;padding:8px 26px;border:1px solid;border-radius:2px;font-size:18px;font-weight:700;letter-spacing:3px;background:' + (wxColor[ch.wuXing] || '#b8a878') + '22;border-color:' + (wxColor[ch.wuXing] || '#b8a878') + ';color:' + (wxColor[ch.wuXing] || '#b8a878') + '">' + (wxEmoji[ch.wuXing] || '') + ' ' + ch.dayGan + ch.wuXing + '日主</span>'
+        + '</div>'
+        + '<div style="font-size:14px;color:var(--text-primary);line-height:2;padding:12px 16px;background:rgba(20,25,40,.4);border:1px solid rgba(212,175,55,.06);border-radius:2px;margin-bottom:14px">'
+        +   '<p><b>一句话概括：</b>' + (wxStories[ch.wuXing] || ch.nature.xingxiang) + '</p>'
+        + '</div>'
+        + '<div style="font-size:13px;color:var(--text-primary);line-height:2;padding:12px 16px;background:rgba(20,25,40,.4);border:1px solid rgba(212,175,55,.06);border-radius:2px;margin-bottom:14px">'
+        +   '<p><b>🍀 你的优点：</b>' + ch.nature.positive + '</p>'
+        + '</div>'
+        + '<div style="font-size:13px;color:var(--text-primary);line-height:2;padding:12px 16px;background:rgba(20,25,40,.4);border:1px solid rgba(212,175,55,.06);border-radius:2px;margin-bottom:14px">'
+        +   '<p><b>⚠️ 容易踩的坑：</b>' + ch.nature.negative + '</p>'
+        + '</div>'
+        + '<div style="font-size:13px;color:var(--text-secondary);line-height:2;padding:12px 16px;background:rgba(212,175,55,.03);border:1px solid rgba(212,175,55,.1);border-radius:2px">'
+        +   '<p><b>🗒 给你的小建议：</b>' + ch.composite + '</p>'
+        + '</div>';
 }
 
-// ==================== 财运分析渲染 ====================
+// ==================== 财运分析渲染（加强版） ====================
 function renderWealth(bazi, gender) {
-    const wl = window.BaZiCalculator.analyzeWealth(bazi, gender);
-    const el = document.getElementById('wealthContent');
+    var wl = window.BaZiCalculator.analyzeWealth(bazi, gender);
+    var el = document.getElementById('wealthContent');
     if (!el) return;
 
-    const wxColors = { '木':'#4CAF50','火':'#F44336','土':'#CD853F','金':'#FFD700','水':'#2196F3' };
-    const pct = Math.min(100, Math.max(10, Math.round(wl.wangScore / 6 * 100)));
+    var wxColors = { '木': '#4CAF50', '火': '#F44336', '土': '#CD853F', '金': '#FFD700', '水': '#2196F3' };
+    var caiColor = wxColors[wl.caiWX] || '#b8a878';
+    var wangLabels = { '身强': '比较强', '中和偏强': '还不错', '中和偏弱': '有点弱', '身弱': '比较弱' };
 
-    const posHtml = wl.caiPositions.length > 0
-        ? wl.caiPositions.map(p => `<span class="wl-pos-tag">${p}</span>`).join('')
-        : '<span class="wl-pos-tag" style="opacity:0.6">财星不显</span>';
+    // 财星位置
+    var posNames = { year: '祖上', month: '青年', day: '自己', hour: '晚年' };
+    var posList = wl.caiPositions.map(function(p) { return posNames[p] || p; });
+    var posText = posList.length > 0 ? posList.join('、') : '财气不显但靠自己';
 
-    const wangLabels = { '身强':'💪 身强','中和偏强':'🙂 中和偏强','中和偏弱':'😐 中和偏弱','身弱':'😔 身弱' };
+    // 财富量级描述
+    var levelHtml = (wl.wealthLevels || []).map(function(l) {
+        return '<p style="margin:0 0 8px">' + l + '</p>';
+    }).join('');
 
-    el.innerHTML = `
-        <div class="wl-top">
-            <div class="wl-top-item">
-                <span class="wl-top-icon">💰</span>
-                <div>
-                    <span class="wl-top-label">财星五行</span>
-                    <span class="wl-top-val" style="color:${wxColors[wl.caiWX] || '#b8a878'}">${wl.caiWX}</span>
-                </div>
-            </div>
-            <div class="wl-top-item">
-                <span class="wl-top-icon">📊</span>
-                <div>
-                    <span class="wl-top-label">财星出现</span>
-                    <span class="wl-top-val">${wl.caiCount}次</span>
-                </div>
-            </div>
-            <div class="wl-top-item">
-                <span class="wl-top-icon">⚖️</span>
-                <div>
-                    <span class="wl-top-label">日主状态</span>
-                    <span class="wl-top-val">${wangLabels[wl.wangStatus] || wl.wangStatus}</span>
-                </div>
-            </div>
-        </div>
-        <div class="wl-wang-bar">
-            <span class="wl-wang-label">日主旺度</span>
-            <div class="wl-wang-track">
-                <div class="wl-wang-fill" style="width:${pct}%;background:${pct > 60 ? '#4CAF50' : pct > 30 ? '#ff9f43' : '#F44336'}"></div>
-            </div>
-            <span class="wl-wang-num">${wl.wangScore.toFixed(1)}</span>
-        </div>
-        <div class="wl-pos-row">
-            <span class="wl-pos-label">财星位置</span>
-            <div class="wl-pos-tags">${posHtml}</div>
-        </div>
-        <div class="wl-analysis">
-            <div class="wl-ana-item">
-                <div class="wl-ana-label">财运概况</div>
-                <div class="wl-ana-text">${wl.caiText}</div>
-            </div>
-            <div class="wl-ana-item">
-                <div class="wl-ana-label">担财能力</div>
-                <div class="wl-ana-text">${wl.caiWanxi}</div>
-            </div>
-            <div class="wl-ana-item">
-                <div class="wl-ana-label">建议</div>
-                <div class="wl-ana-text">${wl.caiAdvice}</div>
-            </div>
-        </div>
-    `;
+    // 有利城市
+    var goodCityTags = (wl.goodCities || []).map(function(c) {
+        return '<span style="display:inline-block;padding:3px 10px;margin:2px;border:1px solid rgba(76,175,80,.3);border-radius:2px;font-size:12px;color:#81C784">' + c + '</span>';
+    }).join('');
+    // 不利城市
+    var badCityTags = (wl.badCities || []).map(function(c) {
+        return '<span style="display:inline-block;padding:3px 10px;margin:2px;border:1px solid rgba(244,67,54,.3);border-radius:2px;font-size:12px;color:#E57373">' + c + '</span>';
+    }).join('');
+
+    el.innerHTML = ''
+        // ==== 顶部概览 ====
+        + '<div style="text-align:center;margin-bottom:18px">'
+        +   '<div style="font-family:\'ZCOOL XiaoWei\',\'Noto Serif SC\',serif;font-size:22px;letter-spacing:4px;color:' + caiColor + ';margin-bottom:2px">'
+        +     '💰 ' + wl.caiWX + '为财'
+        +   '</div>'
+        +   '<div style="font-size:12px;color:var(--text-dim);letter-spacing:2px">出现 ' + wl.caiCount + ' 次 · 命格底气 ' + (wangLabels[wl.wangStatus] || wl.wangStatus) + ' · 财在' + posText + '</div>'
+        + '</div>'
+
+        // ==== 一句话总结 ====
+        + '<div style="font-size:14px;color:var(--text-primary);line-height:2;padding:16px 18px;background:rgba(20,25,40,.5);border:1px solid rgba(212,175,55,.08);border-radius:3px;margin-bottom:16px">'
+        +   '<p style="margin:0">📋 <b>概览：</b>' + (wl.wealthSummary || '你的财运有根有底，别着急，好事在后头') + '</p>'
+        + '</div>'
+
+        // ==== 财富量级（核心） ====
+        + '<div style="margin-bottom:10px">'
+        +   '<span style="font-size:12px;color:var(--gold);letter-spacing:3px;font-weight:600">🏆 未来财富量级</span>'
+        + '</div>'
+        + '<div style="font-size:13px;color:var(--text-primary);line-height:2;padding:16px 18px;background:rgba(212,175,55,.04);border:1px solid rgba(212,175,55,.12);border-radius:3px;margin-bottom:16px">'
+        +   levelHtml
+        + '</div>'
+
+        // ==== 方位与城市 ====
+        + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">'
+        // 有利方位
+        +   '<div style="flex:1;min-width:140px;padding:14px 16px;background:rgba(76,175,80,.04);border:1px solid rgba(76,175,80,.12);border-radius:3px">'
+        +     '<div style="font-size:13px;color:#81C784;font-weight:700;letter-spacing:2px;margin-bottom:8px">🧭 旺财方位</div>'
+        +     '<div style="font-size:18px;font-weight:700;color:#81C784;margin-bottom:6px;letter-spacing:2px">' + wl.goodDirection + '方' + '</div>'
+        +     '<div style="font-size:11px;color:var(--text-dim);margin-bottom:10px;line-height:1.6">往这个方向发展的城市，更容易遇到贵人、打开财路。出差、旅行、甚至定居都可以多往这边靠。</div>'
+        +     '<div style="margin-bottom:4px;font-size:11px;color:var(--text-secondary);letter-spacing:1px">利好城市</div>'
+        +     '<div>' + goodCityTags + '</div>'
+        +   '</div>'
+        // 不利方位
+        +   '<div style="flex:1;min-width:140px;padding:14px 16px;background:rgba(244,67,54,.04);border:1px solid rgba(244,67,54,.12);border-radius:3px">'
+        +     '<div style="font-size:13px;color:#E57373;font-weight:700;letter-spacing:2px;margin-bottom:8px">⚠️ 求财慎往</div>'
+        +     '<div style="font-size:18px;font-weight:700;color:#E57373;margin-bottom:6px;letter-spacing:2px">' + wl.badDirection + '方' + '</div>'
+        +     '<div style="font-size:11px;color:var(--text-dim);margin-bottom:10px;line-height:1.6">去这些地方发展可能会比较吃力，赚钱比别人费劲一些。不是不能去，但要有心理准备。</div>'
+        +     '<div style="margin-bottom:4px;font-size:11px;color:var(--text-secondary);letter-spacing:1px">需谨慎的城市</div>'
+        +     '<div>' + badCityTags + '</div>'
+        +   '</div>'
+        + '</div>'
+
+        // ==== 详细解读 ====
+        + '<div style="font-size:13px;color:var(--text-primary);line-height:2;padding:14px 16px;background:rgba(20,25,40,.4);border:1px solid rgba(212,175,55,.06);border-radius:3px;margin-bottom:12px">'
+        +   '<p style="margin:0"><b>💡 赚钱建议：</b>' + wl.caiAdvice + '</p>'
+        + '</div>'
+
+        // ==== 底层解读 ====
+        + '<div style="font-size:12px;color:var(--text-secondary);line-height:2;padding:12px 16px;background:rgba(212,175,55,.03);border:1px solid rgba(212,175,55,.1);border-radius:3px">'
+        +   '<p style="margin:0"><b>🗂 命理解读：</b>' + wl.caiWanxi + '</p>'
+        + '</div>';
 }
 
 // ==================== 流年运势渲染 ====================
@@ -918,46 +880,37 @@ function renderStudy(bazi) {
     const st = window.BaZiCalculator.analyzeStudy(bazi);
     const el = document.getElementById('studyContent');
     if (!el) return;
-
     const wxColors = { '木':'#4CAF50','火':'#F44336','土':'#CD853F','金':'#FFD700','水':'#2196F3' };
     const yinPct = Math.min(100, Math.max(5, Math.round(st.yinScore / 6 * 100)));
 
-    el.innerHTML = `
-        <div class="st-level">
-            <span class="st-level-badge" style="background:${wxColors[st.wuXing]}22;border-color:${wxColors[st.wuXing]};color:${wxColors[st.wuXing]}">
-                ${st.levelLabel}
-            </span>
-        </div>
-        <div class="st-metrics">
-            <div class="st-metric">
-                <span class="st-metric-icon">📖</span>
-                <span class="st-metric-label">印星</span>
-                <div class="st-metric-bar"><div class="st-metric-fill" style="width:${yinPct}%;background:${wxColors[st.wuXing]}"></div></div>
-                <span class="st-metric-num">${st.yinScore.toFixed(1)}</span>
-            </div>
-            <div class="st-metric">
-                <span class="st-metric-icon">💡</span>
-                <span class="st-metric-label">食伤</span>
-                <div class="st-metric-bar"><div class="st-metric-fill" style="width:${Math.min(100,Math.round(st.shiShangScore/6*100))}%;background:#ff9f43"></div></div>
-                <span class="st-metric-num">${st.shiShangScore.toFixed(1)}</span>
-            </div>
-            <div class="st-metric">
-                <span class="st-metric-icon">🎯</span>
-                <span class="st-metric-label">官星</span>
-                <div class="st-metric-bar"><div class="st-metric-fill" style="width:${Math.min(100,Math.round(st.guanScore/4*100))}%;background:#4dadff"></div></div>
-                <span class="st-metric-num">${st.guanScore.toFixed(1)}</span>
-            </div>
-        </div>
-        <div class="st-desc">${st.levelText}</div>
-        <div class="st-yin-pos">
-            <div class="st-section-label">印星分布</div>
-            <div class="st-yin-text">${st.yinPosText.replace(/·/g, '<br/>·')}</div>
-        </div>
-        <div class="st-advice">
-            <div class="st-section-label">学习建议</div>
-            <div class="st-advice-text">${st.adviceText}</div>
-        </div>
-    `;
+    // 大白话等级说明
+    const levelStories = {
+        '学业优秀': '你的学习能力很强——天生有很好的吸收和理解能力，读书考试对你来说不是难事。如果能找到自己真正感兴趣的领域，潜力非常大。',
+        '学业良好': '你的学习底子不错，虽然不是天才型但胜在踏实。只要愿意下功夫，考试升学都有很好的机会。找到一个好老师或者好的学习环境会让你事半功倍。',
+        '学业中等': '书本学习可能不是你最强的武器，但这不代表你不行。你可能更适合动手操作、和人打交道或者搞创意——有很多职业不需要高分也能做得很好。',
+        '学业需努力': '读书考试确实需要比别人多花力气，但这往往意味着你的天赋在别处。建议多尝试不同的学习方式，动手做比光看书效果好，找到适合自己的路比硬拼更重要。'
+    };
+
+    // 学习建议扩展
+    const fullAdvice = '建议你选择最适合自己的学习方式，把长处发挥到极致。' + st.adviceText;
+
+    el.innerHTML = ''
+        + '<div style="text-align:center;margin-bottom:14px">'
+        +   '<span style="display:inline-block;padding:6px 24px;border:1px solid;border-radius:2px;font-size:16px;font-weight:700;letter-spacing:3px;background:' + (wxColors[st.wuXing] || '#b8a878') + '22;border-color:' + (wxColors[st.wuXing] || '#b8a878') + ';color:' + (wxColors[st.wuXing] || '#b8a878') + '">' + st.levelLabel + '</span>'
+        + '</div>'
+        + '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">'
+        +   '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:12px;color:var(--text-secondary);flex:0 0 40px;letter-spacing:1px">学习力</span><div style="flex:1;height:8px;background:rgba(255,255,255,.05);border-radius:1px;overflow:hidden"><div style="height:100%;width:' + yinPct + '%;background:' + (wxColors[st.wuXing] || '#b8a878') + ';border-radius:1px;transition:width .6s"></div></div><span style="font-size:12px;color:var(--text-secondary)">' + st.yinScore.toFixed(1) + '</span></div>'
+        +   '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:12px;color:var(--text-secondary);flex:0 0 40px;letter-spacing:1px">创造力</span><div style="flex:1;height:8px;background:rgba(255,255,255,.05);border-radius:1px;overflow:hidden"><div style="height:100%;width:' + Math.min(100,Math.round(st.shiShangScore/6*100)) + '%;background:#ff9f43;border-radius:1px;transition:width .6s"></div></div><span style="font-size:12px;color:var(--text-secondary)">' + st.shiShangScore.toFixed(1) + '</span></div>'
+        +   '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:12px;color:var(--text-secondary);flex:0 0 40px;letter-spacing:1px">自律力</span><div style="flex:1;height:8px;background:rgba(255,255,255,.05);border-radius:1px;overflow:hidden"><div style="height:100%;width:' + Math.min(100,Math.round(st.guanScore/4*100)) + '%;background:#4dadff;border-radius:1px;transition:width .6s"></div></div><span style="font-size:12px;color:var(--text-secondary)">' + st.guanScore.toFixed(1) + '</span></div>'
+        + '</div>'
+        + '<div style="font-size:13px;color:var(--text-primary);line-height:2;padding:14px 16px;background:rgba(20,25,40,.4);border:1px solid rgba(212,175,55,.06);border-radius:2px;margin-bottom:12px">'
+        +   '<p>' + (levelStories[st.levelLabel] || st.levelText) + '</p>'
+        + '</div>'
+        +   (st.hasWenChang ? '<div style="font-size:13px;color:#81C784;line-height:2;padding:10px 14px;background:rgba(76,175,80,.04);border:1px solid rgba(212,175,55,.08);border-radius:2px;margin-bottom:10px"><p>🌟 自带文昌贵人，考试运不错，关键时刻容易发挥出超常水平。</p></div>' : '')
+        +   (st.hasXueTang ? '<div style="font-size:13px;color:#81C784;line-height:2;padding:10px 14px;background:rgba(76,175,80,.04);border:1px solid rgba(212,175,55,.08);border-radius:2px;margin-bottom:10px"><p>📖 命带学堂，天生对知识有好奇心，适合持续学习的环境。</p></div>' : '')
+        + '<div style="font-size:13px;color:var(--text-secondary);line-height:2;padding:14px 16px;background:rgba(212,175,55,.03);border:1px solid rgba(212,175,55,.1);border-radius:2px">'
+        +   '<p><b>📝 建议：</b>' + fullAdvice + '</p>'
+        + '</div>';
 }
 
 // ==================== 真太阳时 ====================
@@ -1021,7 +974,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const daYun = window.BaZiCalculator.calculateDaYun(
         bazi.month, bazi.year, _params.gender,
-        _params.year, _params.month, _params.day
+        _params.year, _params.month, _params.day, _params.hour
     );
 
     const shenSha = window.BaZiCalculator.calculateShenSha(bazi);
