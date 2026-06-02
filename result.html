@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>八字排盘结果</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/result.css">
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;600;700;900&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="bg-layer">
+        <canvas id="bgCanvas"></canvas>
+        <div class="bg-overlay"></div>
+    </div>
+
+    <div class="result-container">
+        <!-- 顶部信息栏 -->
+        <header class="result-header">
+            <a href="index.html" class="back-link">← 重新排盘</a>
+            <h1 class="result-title">八字命盘</h1>
+            <div class="birth-info">
+                <span id="genderLabel"></span>
+                <span class="info-sep">|</span>
+                <span id="birthDateText"></span>
+                <span class="info-sep">|</span>
+                <span id="birthHourText"></span>
+            </div>
+            <div class="nayin-info">
+                纳音：<span id="nayinText"></span>
+                <span class="info-sep">|</span>
+                真太阳时：<span id="solarTimeText"></span>
+            </div>
+        </header>
+
+        <!-- ==================== 大运流年区域 ==================== -->
+        <section class="section-dayun">
+            <div class="section-header">
+                <h2>大运</h2>
+                <span class="section-sub" id="dayunDirection"></span>
+            </div>
+            <div class="dayun-scroll-wrapper">
+                <div class="dayun-table" id="dayunTable">
+                    <!-- 由JS动态生成 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 流年详情区域 ==================== -->
+        <section class="section-liunian" id="liunianSection">
+            <div class="section-header">
+                <h2>流年</h2>
+                <span class="section-sub" id="liunianRange"></span>
+            </div>
+            <div class="liunian-scroll-wrapper">
+                <div class="liunian-table" id="liunianTable">
+                    <!-- 由JS动态生成 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 四柱八字主排盘 ==================== -->
+        <section class="section-sizhu">
+            <div class="section-header">
+                <h2>四柱八字</h2>
+            </div>
+            
+            <!-- 专业排盘表格 -->
+            <div class="paipan-table">
+                <!-- 表头：流年/大运/四柱名称 -->
+                <div class="pp-row pp-header">
+                    <div class="pp-label"></div>
+                    <div class="pp-col pp-liunian-col">流年</div>
+                    <div class="pp-col pp-dayun-col">大运</div>
+                    <div class="pp-col">年柱</div>
+                    <div class="pp-col">月柱</div>
+                    <div class="pp-col pp-day">日柱</div>
+                    <div class="pp-col">时柱</div>
+                </div>
+
+                <!-- 十神（天干） -->
+                <div class="pp-row pp-ss-row">
+                    <div class="pp-label">十神</div>
+                    <div class="pp-col pp-liunian-col" id="ss-liunian-gan"></div>
+                    <div class="pp-col pp-dayun-col" id="ss-dayun-gan"></div>
+                    <div class="pp-col" id="ss-year-gan"></div>
+                    <div class="pp-col" id="ss-month-gan"></div>
+                    <div class="pp-col pp-day"><span class="day-master-tag">日主</span></div>
+                    <div class="pp-col" id="ss-hour-gan"></div>
+                </div>
+
+                <!-- 天干 -->
+                <div class="pp-row pp-gan-row">
+                    <div class="pp-label">天干</div>
+                    <div class="pp-col pp-liunian-col"><span class="tian-gan" id="gan-liunian"></span></div>
+                    <div class="pp-col pp-dayun-col"><span class="tian-gan" id="gan-dayun"></span></div>
+                    <div class="pp-col"><span class="tian-gan" id="gan-year"></span></div>
+                    <div class="pp-col"><span class="tian-gan" id="gan-month"></span></div>
+                    <div class="pp-col pp-day"><span class="tian-gan day-master-gan" id="gan-day"></span></div>
+                    <div class="pp-col"><span class="tian-gan" id="gan-hour"></span></div>
+                </div>
+
+                <!-- 地支 -->
+                <div class="pp-row pp-zhi-row">
+                    <div class="pp-label">地支</div>
+                    <div class="pp-col pp-liunian-col"><span class="di-zhi" id="zhi-liunian"></span></div>
+                    <div class="pp-col pp-dayun-col"><span class="di-zhi" id="zhi-dayun"></span></div>
+                    <div class="pp-col"><span class="di-zhi" id="zhi-year"></span></div>
+                    <div class="pp-col"><span class="di-zhi" id="zhi-month"></span></div>
+                    <div class="pp-col pp-day"><span class="di-zhi" id="zhi-day"></span></div>
+                    <div class="pp-col"><span class="di-zhi" id="zhi-hour"></span></div>
+                </div>
+
+                <!-- 十神（地支） -->
+                <div class="pp-row pp-ss-row">
+                    <div class="pp-label">十神</div>
+                    <div class="pp-col pp-liunian-col" id="ss-liunian-zhi"></div>
+                    <div class="pp-col pp-dayun-col" id="ss-dayun-zhi"></div>
+                    <div class="pp-col" id="ss-year-zhi"></div>
+                    <div class="pp-col" id="ss-month-zhi"></div>
+                    <div class="pp-col pp-day" id="ss-day-zhi"></div>
+                    <div class="pp-col" id="ss-hour-zhi"></div>
+                </div>
+
+                <!-- 藏干（含十神） -->
+                <div class="pp-row pp-cang-row">
+                    <div class="pp-label">藏干</div>
+                    <div class="pp-col pp-cang pp-liunian-col" id="cang-liunian"></div>
+                    <div class="pp-col pp-cang pp-dayun-col" id="cang-dayun"></div>
+                    <div class="pp-col pp-cang" id="cang-year"></div>
+                    <div class="pp-col pp-cang" id="cang-month"></div>
+                    <div class="pp-col pp-cang pp-day" id="cang-day"></div>
+                    <div class="pp-col pp-cang" id="cang-hour"></div>
+                </div>
+
+                <!-- 神煞 -->
+                <div class="pp-row pp-shensha-row">
+                    <div class="pp-label">神煞</div>
+                    <div class="pp-col pp-shensha pp-liunian-col" id="shensha-liunian"></div>
+                    <div class="pp-col pp-shensha pp-dayun-col" id="shensha-dayun"></div>
+                    <div class="pp-col pp-shensha" id="shensha-year"></div>
+                    <div class="pp-col pp-shensha" id="shensha-month"></div>
+                    <div class="pp-col pp-shensha pp-day" id="shensha-day"></div>
+                    <div class="pp-col pp-shensha" id="shensha-hour"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 神煞详解 ==================== -->
+        <section class="section-drawer section-shensha-detail" id="shenshaDetailSection">
+            <div class="section-header drawer-toggle" onclick="toggleDrawer('shenshaDetailSection')">
+                <span class="drawer-arrow">▶</span>
+                <h2>神煞详解</h2>
+                <span class="section-sub" id="shenshaCount"></span>
+            </div>
+            <div class="drawer-body">
+                <div class="shensha-accordion" id="shenshaAccordion">
+                    <!-- 由JS动态生成折叠面板 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 五行分析 ==================== -->
+        <section class="section-drawer section-wuxing" id="wuxingSection">
+            <div class="section-header drawer-toggle" onclick="toggleDrawer('wuxingSection')">
+                <span class="drawer-arrow">▶</span>
+                <h2>五行分析</h2>
+            </div>
+            <div class="drawer-body">
+                <div class="wuxing-stats">
+                    <div class="wx-item" id="wx-jin" data-wx="金">
+                        <span class="wx-name">金</span>
+                        <div class="wx-bar"><div class="wx-fill"></div></div>
+                        <span class="wx-num">0</span>
+                    </div>
+                    <div class="wx-item" id="wx-mu" data-wx="木">
+                        <span class="wx-name">木</span>
+                        <div class="wx-bar"><div class="wx-fill"></div></div>
+                        <span class="wx-num">0</span>
+                    </div>
+                    <div class="wx-item" id="wx-shui" data-wx="水">
+                        <span class="wx-name">水</span>
+                        <div class="wx-bar"><div class="wx-fill"></div></div>
+                        <span class="wx-num">0</span>
+                    </div>
+                    <div class="wx-item" id="wx-huo" data-wx="火">
+                        <span class="wx-name">火</span>
+                        <div class="wx-bar"><div class="wx-fill"></div></div>
+                        <span class="wx-num">0</span>
+                    </div>
+                    <div class="wx-item" id="wx-tu" data-wx="土">
+                        <span class="wx-name">土</span>
+                        <div class="wx-bar"><div class="wx-fill"></div></div>
+                        <span class="wx-num">0</span>
+                    </div>
+                </div>
+                <div class="wuxing-summary" id="wuxingSummary"></div>
+            </div>
+        </section>
+
+        <!-- ==================== 袁天罡称骨 ==================== -->
+        <section class="section-drawer section-chenggu" id="chengguSection">
+            <div class="section-header drawer-toggle" onclick="toggleDrawer('chengguSection')">
+                <span class="drawer-arrow">▶</span>
+                <h2>袁天罡称骨</h2>
+            </div>
+            <div class="drawer-body">
+                <div class="chenggu-content" id="chengguContent">
+                    <!-- 由JS动态生成 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 日主解析 · 滴天髓 ==================== -->
+        <section class="section-drawer section-rizhu" id="rizhuSection">
+            <div class="section-header drawer-toggle" onclick="toggleDrawer('rizhuSection')">
+                <span class="drawer-arrow">▶</span>
+                <h2>日主解析 · 滴天髓</h2>
+            </div>
+            <div class="drawer-body">
+                <div class="rizhu-content" id="rizhuContent">
+                    <!-- 由JS动态生成 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 夫妻宫分析 ==================== -->
+        <section class="section-drawer section-fuqi" id="fuqiSection">
+            <div class="section-header drawer-toggle" onclick="toggleDrawer('fuqiSection')">
+                <span class="drawer-arrow">▶</span>
+                <h2>夫妻宫</h2>
+            </div>
+            <div class="drawer-body">
+                <div class="fuqi-content" id="fuqiContent">
+                    <!-- 由JS动态生成 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 配偶年龄分析 ==================== -->
+        <section class="section-drawer section-spouse-age" id="spouseAgeSection">
+            <div class="section-header drawer-toggle" onclick="toggleDrawer('spouseAgeSection')">
+                <span class="drawer-arrow">▶</span>
+                <h2>配偶年龄</h2>
+            </div>
+            <div class="drawer-body">
+                <div class="spouse-age-content" id="spouseAgeContent">
+                    <!-- 由JS动态生成 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 父母关系分析 ==================== -->
+        <section class="section-drawer section-parents" id="parentsSection">
+            <div class="section-header drawer-toggle" onclick="toggleDrawer('parentsSection')">
+                <span class="drawer-arrow">▶</span>
+                <h2>父母关系</h2>
+            </div>
+            <div class="drawer-body">
+                <div class="parents-content" id="parentsContent">
+                    <!-- 由JS动态生成 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 日主性格 ==================== -->
+        <section class="section-drawer section-character" id="characterSection">
+            <div class="section-header drawer-toggle" onclick="toggleDrawer('characterSection')">
+                <span class="drawer-arrow">▶</span>
+                <h2>日主性格</h2>
+            </div>
+            <div class="drawer-body">
+                <div class="character-content" id="characterContent">
+                    <!-- 由JS动态生成 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 财运分析 ==================== -->
+        <section class="section-drawer section-wealth" id="wealthSection">
+            <div class="section-header drawer-toggle" onclick="toggleDrawer('wealthSection')">
+                <span class="drawer-arrow">▶</span>
+                <h2>财运分析</h2>
+            </div>
+            <div class="drawer-body">
+                <div class="wealth-content" id="wealthContent">
+                    <!-- 由JS动态生成 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 大运流年运势 ==================== -->
+        <section class="section-drawer section-fortune" id="fortuneSection">
+            <div class="section-header drawer-toggle" onclick="toggleDrawer('fortuneSection')">
+                <span class="drawer-arrow">▶</span>
+                <h2>近5年流年运势</h2>
+            </div>
+            <div class="drawer-body">
+                <div class="fortune-content" id="fortuneContent">
+                    <!-- 由JS动态生成 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 学业分析 ==================== -->
+        <section class="section-drawer section-study" id="studySection">
+            <div class="section-header drawer-toggle" onclick="toggleDrawer('studySection')">
+                <span class="drawer-arrow">▶</span>
+                <h2>学业分析</h2>
+            </div>
+            <div class="drawer-body">
+                <div class="study-content" id="studyContent">
+                    <!-- 由JS动态生成 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 底部声明 -->
+        <footer class="result-footer">
+            <p>※ 本排盘结果仅供学习参考与娱乐交流，不构成任何决策建议</p>
+        </footer>
+    </div>
+
+    <script src="js/bazi.js"></script>
+    <script src="js/bg-animation.js"></script>
+    <script src="js/result.js"></script>
+</body>
+</html>

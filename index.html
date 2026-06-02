@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>八字排盘 - 命理推演</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;600;700;900&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 背景层 -->
+    <div class="bg-layer">
+        <canvas id="bgCanvas"></canvas>
+        <div class="bg-overlay"></div>
+    </div>
+
+    <!-- 太极八卦装饰 -->
+    <div class="taiji-deco">
+        <svg class="taiji-svg" viewBox="0 0 200 200" width="200" height="200">
+            <defs>
+                <radialGradient id="yinGrad" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#1a1a2e"/>
+                    <stop offset="100%" stop-color="#0a0a15"/>
+                </radialGradient>
+            </defs>
+            <!-- 外圈 -->
+            <circle cx="100" cy="100" r="98" fill="none" stroke="rgba(212,175,55,0.3)" stroke-width="1"/>
+            <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(212,175,55,0.15)" stroke-width="0.5"/>
+            <!-- 八卦符号 -->
+            <g class="bagua-symbols" transform="translate(100,100)">
+                <!-- 乾 ☰ -->
+                <g transform="rotate(0) translate(0,-70)">
+                    <line x1="-12" y1="0" x2="12" y2="0" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="-12" y1="-6" x2="12" y2="-6" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="-12" y1="-12" x2="12" y2="-12" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                </g>
+                <!-- 坤 ☷ -->
+                <g transform="rotate(45) translate(0,-70)">
+                    <line x1="-12" y1="0" x2="-2" y2="0" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="2" y1="0" x2="12" y2="0" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="-12" y1="-6" x2="-2" y2="-6" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="2" y1="-6" x2="12" y2="-6" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="-12" y1="-12" x2="-2" y2="-12" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="2" y1="-12" x2="12" y2="-12" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                </g>
+                <!-- 震 ☳ -->
+                <g transform="rotate(90) translate(0,-70)">
+                    <line x1="-12" y1="0" x2="12" y2="0" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="-12" y1="-6" x2="-2" y2="-6" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="2" y1="-6" x2="12" y2="-6" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="-12" y1="-12" x2="-2" y2="-12" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="2" y1="-12" x2="12" y2="-12" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                </g>
+                <!-- 巽 ☴ -->
+                <g transform="rotate(135) translate(0,-70)">
+                    <line x1="-12" y1="0" x2="12" y2="0" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="-12" y1="-6" x2="12" y2="-6" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="-12" y1="-12" x2="12" y2="-12" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                </g>
+                <!-- 坎 ☵ -->
+                <g transform="rotate(180) translate(0,-70)">
+                    <line x1="-12" y1="0" x2="-2" y2="0" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="2" y1="0" x2="12" y2="0" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="-12" y1="-6" x2="12" y2="-6" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="-12" y1="-12" x2="-2" y2="-12" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="2" y1="-12" x2="12" y2="-12" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                </g>
+                <!-- 离 ☲ -->
+                <g transform="rotate(225) translate(0,-70)">
+                    <line x1="-12" y1="0" x2="12" y2="0" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="-12" y1="-6" x2="-2" y2="-6" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="2" y1="-6" x2="12" y2="-6" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="-12" y1="-12" x2="12" y2="-12" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                </g>
+                <!-- 艮 ☶ -->
+                <g transform="rotate(270) translate(0,-70)">
+                    <line x1="-12" y1="0" x2="12" y2="0" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="-12" y1="-6" x2="-2" y2="-6" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="2" y1="-6" x2="12" y2="-6" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="-12" y1="-12" x2="-2" y2="-12" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="2" y1="-12" x2="12" y2="-12" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                </g>
+                <!-- 兑 ☱ -->
+                <g transform="rotate(315) translate(0,-70)">
+                    <line x1="-12" y1="0" x2="12" y2="0" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="-12" y1="-6" x2="12" y2="-6" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="-12" y1="-12" x2="-2" y2="-12" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                    <line x1="2" y1="-12" x2="12" y2="-12" stroke="rgba(212,175,55,0.6)" stroke-width="2"/>
+                </g>
+            </g>
+            <!-- 太极阴阳鱼 -->
+            <g class="taiji-fish">
+                <path d="M100,10 A45,45 0 0,1 100,100 A45,45 0 0,0 100,190 A90,90 0 0,1 100,10" fill="rgba(212,175,55,0.15)"/>
+                <circle cx="100" cy="55" r="8" fill="rgba(212,175,55,0.3)"/>
+                <circle cx="100" cy="145" r="8" fill="rgba(212,175,55,0.08)"/>
+            </g>
+        </svg>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="main-container">
+        <!-- 顶部标题区 -->
+        <header class="site-header">
+            <div class="header-top-line"></div>
+            <h1 class="site-title">
+                <span class="title-char">八</span>
+                <span class="title-char">字</span>
+                <span class="title-char">排</span>
+                <span class="title-char">盘</span>
+            </h1>
+            <div class="title-divider">
+                <span class="divider-line"></span>
+                <span class="divider-dot"></span>
+                <span class="divider-line"></span>
+            </div>
+            <p class="site-subtitle">穷究天人之际 · 洞察命理玄机</p>
+        </header>
+
+        <!-- 表单区域 -->
+        <main class="form-section">
+            <div class="form-frame">
+                <!-- 四角装饰 -->
+                <div class="corner-deco top-left"></div>
+                <div class="corner-deco top-right"></div>
+                <div class="corner-deco bottom-left"></div>
+                <div class="corner-deco bottom-right"></div>
+
+                <div class="form-title-area">
+                    <span class="form-icon">☯</span>
+                    <h2>输入生辰 · 排盘推演</h2>
+                    <p class="form-hint">请准确填写出生年月日时，以获取精准命盘</p>
+                </div>
+
+                <form id="birthForm" class="birth-form" autocomplete="off">
+                    <!-- 年柱·月柱·日柱 · 滚轮选择 -->
+                    <div class="picker-section">
+                        <div class="section-divider">
+                            <span class="sd-line"></span>
+                            <span class="sd-label">生辰八字</span>
+                            <span class="sd-line"></span>
+                        </div>
+                        <div class="picker-row" id="datePickerRow">
+                            <div class="picker-col">
+                                <div class="picker-label">年柱</div>
+                                <div class="scroll-picker" id="yearPicker">
+                                    <div class="sp-list" id="yearList"></div>
+                                    <div class="sp-indicator"></div>
+                                </div>
+                            </div>
+                            <div class="picker-col">
+                                <div class="picker-label">月柱</div>
+                                <div class="scroll-picker" id="monthPicker">
+                                    <div class="sp-list" id="monthList"></div>
+                                    <div class="sp-indicator"></div>
+                                </div>
+                            </div>
+                            <div class="picker-col">
+                                <div class="picker-label">日柱</div>
+                                <div class="scroll-picker" id="dayPicker">
+                                    <div class="sp-list" id="dayList"></div>
+                                    <div class="sp-indicator"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 时柱 · 性别 -->
+                    <div class="form-row form-row-dual">
+                        <div class="form-group form-group-hour">
+                            <label for="birthHour">时柱</label>
+                            <select id="birthHour" name="hour" required>
+                                <option value="">-- 选择时辰 --</option>
+                                <optgroup label="子时 23:00-01:00">
+                                    <option value="0">23点 · 晚子时</option>
+                                    <option value="0"> 0点 · 早子时</option>
+                                </optgroup>
+                                <optgroup label="丑时 01:00-03:00">
+                                    <option value="1"> 1点</option>
+                                    <option value="1"> 2点</option>
+                                </optgroup>
+                                <optgroup label="寅时 03:00-05:00">
+                                    <option value="2"> 3点</option>
+                                    <option value="2"> 4点</option>
+                                </optgroup>
+                                <optgroup label="卯时 05:00-07:00">
+                                    <option value="3"> 5点</option>
+                                    <option value="3"> 6点</option>
+                                </optgroup>
+                                <optgroup label="辰时 07:00-09:00">
+                                    <option value="4"> 7点</option>
+                                    <option value="4"> 8点</option>
+                                </optgroup>
+                                <optgroup label="巳时 09:00-11:00">
+                                    <option value="5"> 9点</option>
+                                    <option value="5">10点</option>
+                                </optgroup>
+                                <optgroup label="午时 11:00-13:00">
+                                    <option value="6">11点</option>
+                                    <option value="6">12点</option>
+                                </optgroup>
+                                <optgroup label="未时 13:00-15:00">
+                                    <option value="7">13点</option>
+                                    <option value="7">14点</option>
+                                </optgroup>
+                                <optgroup label="申时 15:00-17:00">
+                                    <option value="8">15点</option>
+                                    <option value="8">16点</option>
+                                </optgroup>
+                                <optgroup label="酉时 17:00-19:00">
+                                    <option value="9">17点</option>
+                                    <option value="9">18点</option>
+                                </optgroup>
+                                <optgroup label="戌时 19:00-21:00">
+                                    <option value="10">19点</option>
+                                    <option value="10">20点</option>
+                                </optgroup>
+                                <optgroup label="亥时 21:00-23:00">
+                                    <option value="11">21点</option>
+                                    <option value="11">22点</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group form-group-gender">
+                            <label for="gender">性别</label>
+                            <select id="gender" name="gender" required>
+                                <option value="">-- 选择 --</option>
+                                <option value="male">☰ 乾造 · 男命</option>
+                                <option value="female">☷ 坤造 · 女命</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 出生地 · 滚轮选择 -->
+                    <div class="picker-section">
+                        <div class="section-divider">
+                            <span class="sd-line"></span>
+                            <span class="sd-label">出生之地</span>
+                            <span class="sd-line"></span>
+                        </div>
+                        <div class="picker-row" id="locPickerRow">
+                            <div class="picker-col">
+                                <div class="picker-label">省</div>
+                                <div class="scroll-picker" id="provPicker">
+                                    <div class="sp-list" id="provList"></div>
+                                    <div class="sp-indicator"></div>
+                                </div>
+                            </div>
+                            <div class="picker-col">
+                                <div class="picker-label">市</div>
+                                <div class="scroll-picker" id="cityPicker">
+                                    <div class="sp-list" id="cityList"></div>
+                                    <div class="sp-indicator"></div>
+                                </div>
+                            </div>
+                            <div class="picker-col">
+                                <div class="picker-label">区县</div>
+                                <div class="scroll-picker" id="distPicker">
+                                    <div class="sp-list" id="distList"></div>
+                                    <div class="sp-indicator"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        <span class="btn-deco-left"></span>
+                        <span class="btn-text">起盘推演</span>
+                        <span class="btn-deco-right"></span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- 底部说明 -->
+            <div class="footer-info">
+                <div class="footer-divider">
+                    <span class="divider-line"></span>
+                    <span class="divider-diamond">◆</span>
+                    <span class="divider-line"></span>
+                </div>
+                <p class="footer-text">四柱八字，源于华夏先贤对天地运行之理的洞察</p>
+                <p class="footer-text">以出生年月日时，配天干地支，推演命理运势</p>
+                <p class="footer-disclaimer">※ 本站内容仅供学习参考与娱乐交流</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/bazi.js"></script>
+    <script src="js/region.js"></script>
+    <script src="js/bg-animation.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
