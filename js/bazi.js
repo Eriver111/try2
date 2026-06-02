@@ -2278,22 +2278,22 @@ function analyzeFortune(bazi, gender) {
             const pillarZhi = bazi[pos].zhi;
             if (CHONG_MAP[yr.zhi + pillarZhi]) {
                 if (pos === 'day') {
-                    riskText = '⚠ 流年与日柱（夫妻宫）相冲——感情、家庭或居住环境可能有变动，建议多沟通、少冲动决策。';
+                    riskText = '! 流年与日柱（夫妻宫）相冲——感情、家庭或居住环境可能有变动，建议多沟通、少冲动决策。';
                     riskLevel += 3;
                 } else if (pos === 'month') {
-                    riskText = '⚠ 流年与月柱相冲——事业、工作环境可能出现调整，宜沉着应对，不宜贸然变动。';
+                    riskText = '! 流年与月柱相冲——事业、工作环境可能出现调整，宜沉着应对，不宜贸然变动。';
                     riskLevel += 2;
                 } else if (pos === 'year') {
-                    riskText = '⚠ 流年与年柱相冲——长辈健康或家庭根基之事需多加关注。';
+                    riskText = '! 流年与年柱相冲——长辈健康或家庭根基之事需多加关注。';
                     riskLevel += 2;
                 }
             }
             if (HE_MAP[yr.zhi + pillarZhi]) {
                 if (pos === 'day') {
-                    oppText = '🔗 流年与日柱（夫妻宫）相合——人缘运佳，感情顺利或遇贵人相助，适合建立深度关系。';
+                    oppText = '-- 流年与日柱（夫妻宫）相合——人缘运佳，感情顺利或遇贵人相助，适合建立深度关系。';
                     riskLevel -= 1;
                 } else if (pos === 'month') {
-                    oppText = '🔗 流年与月柱相合——事业上得助力，合作顺利，容易遇到志同道合的伙伴。';
+                    oppText = '-- 流年与月柱相合——事业上得助力，合作顺利，容易遇到志同道合的伙伴。';
                     riskLevel -= 1;
                 }
             }
@@ -2330,6 +2330,40 @@ function analyzeFortune(bazi, gender) {
             overallColor = '#a29bfe';
         }
 
+        // --- 注意事项 + 凶煞提醒 ---
+        var cautions = [];
+        if (ss === '七杀') {
+            cautions.push('流年七杀当值，压力与挑战并存。注意身体健康，避免过度劳累——这一年适合稳扎稳打，不宜与人正面冲突。');
+            cautions.push('财运上不宜做重大投资决策，容易判断失误。把重心放在守成而非扩张上。');
+        } else if (ss === '劫财') {
+            cautions.push('劫财年容易有意外破财，借钱出去要格外谨慎——可能收不回来。尽量控制社交应酬开销。');
+            cautions.push('职场竞争激烈，注意同事或同行之间的小动作，守住自己的利益边界。');
+        } else if (ss === '伤官') {
+            cautions.push('伤官年表达欲旺盛，但容易说错话得罪人——开口前三思，尤其在公开场合注意分寸。');
+            cautions.push('适合创新和突破，但不适合盲目辞职或与上级对抗。把想法用在创作改良上比用在抱怨上更有价值。');
+        } else if (ss === '偏财') {
+            cautions.push('偏财运带来机会的同时也带来诱惑——警惕高回报承诺的投资项目，大概率是陷阱。落袋为安比什么都重要。');
+            cautions.push('花销增大，社交和人情开支压力上升，建议提前做好预算规划。');
+        } else if (ss === '比肩') {
+            cautions.push('同辈竞争增加，容易在团队中被比较或被分走资源。与其计较，不如借力合作。');
+            cautions.push('社交圈扩大是好，但要擦亮眼睛——不熟的人提出的合作邀约要仔细辨别。');
+        }
+
+        // 冲克风险补充
+        if (riskText && riskText.length > 0) {
+            if (riskText.indexOf('日柱') >= 0) {
+                cautions.push('日柱逢冲，感情和家庭方面容易有波动——多沟通少冲动，重要决定别在情绪激动时做。');
+            }
+            if (riskText.indexOf('月柱') >= 0) {
+                cautions.push('月柱逢冲，事业和工作环境可能生变——宜静不宜动，观察清楚形势再出手。');
+            }
+        }
+
+        // 凶煞补充
+        if (!isFavorable && riskLevel >= 2) {
+            cautions.push('这一年整体运势偏紧，遇事多给自己留余地为好。出行注意安全，证件票据妥善保管。');
+        }
+
         return {
             year: yr.year,
             gan: yr.gan,
@@ -2340,7 +2374,8 @@ function analyzeFortune(bazi, gender) {
             oppText: oppText,
             ssNote: ssNote,
             overallLabel: overallLabel,
-            overallColor: overallColor
+            overallColor: overallColor,
+            cautions: cautions
         };
     });
 
