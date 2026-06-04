@@ -2,9 +2,7 @@
  * 付费遮罩层逻辑
  *
  * 付费板块: 今年运势, 婚姻感情, 财运分析, 学业分析, 近五年流年运势
- * 免费板块: 四柱八字, 大运, 流年表, 专业解读, 日主性格, 父母关系
- *
- * 遮罩只盖内容区（drawer-body），标题栏可见，每个板块显示自己的标题。
+ * 遮罩只盖内容区（drawer-body），标题栏可见。
  * 所有付费板块一次性解锁，9.9 元。
  */
 
@@ -16,7 +14,6 @@ const PAID_SECTIONS = [
   'fortuneSection'
 ];
 
-// 板块中文名
 const SECTION_TITLES = {
   thisYearSection: '今年运势',
   marriageSection: '婚姻感情',
@@ -27,16 +24,16 @@ const SECTION_TITLES = {
 
 const PAYWALL_STATE_KEY = 'bazi_paywall';
 const API_BASE = '/api';
+const POLL_INTERVAL = 3000; // 3秒轮询
 
-// ---- 全局状态 ----
 let _orderId = null;
 let _baziHash = null;
+let _pollTimer = null;
 
 // ---- 初始化 ----
 function initPaywall(baziParams) {
   _baziHash = hashParams(baziParams);
 
-  // 检查本地是否有有效token
   const saved = readSaved();
   if (saved && saved.baziHash === _baziHash) {
     verifyAndUnlock(saved.token);
@@ -45,22 +42,16 @@ function initPaywall(baziParams) {
   }
 }
 
-// ---- 显示遮罩（每个板块独立标题，一次性买断全部） ----
+// ---- 显示遮罩 ----
 function showPaywall() {
   PAID_SECTIONS.forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
-
-    // 找到 drawer-body，只盖内容区
     var body = el.querySelector('.drawer-body');
     if (!body) return;
-
-    // 已有遮罩就不重复添加
     if (body.querySelector('.paywall-overlay')) return;
 
-    // 强制展开，露出标题
     el.classList.add('drawer-open');
-    // 同时旋转箭头
     var arrow = el.querySelector('.drawer-arrow');
     if (arrow) arrow.style.transform = 'rotate(90deg)';
 
@@ -79,13 +70,14 @@ function showPaywall() {
       +   '<button class="paywall-btn" onclick="startPay()">解锁全部内容</button>'
       +   '<div class="paywall-tip" id="paywallTip" style="display:none;margin-top:8px"></div>'
       + '</div>';
-    body.classList.add('paywall-active');   // 强制撑开
+    body.classList.add('paywall-active');
     body.appendChild(overlay);
   });
 }
 
 // ---- 隐藏所有遮罩 ----
 function hidePaywall() {
+  hideQrModal();
   PAID_SECTIONS.forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
@@ -99,56 +91,58 @@ function hidePaywall() {
 
 // ---- 发起支付 ----
 function startPay() {
-  // 所有按钮一起变灰
   var allBtns = document.querySelectorAll('.paywall-btn');
   allBtns.forEach(function(b) { b.disabled = true; b.textContent = '创建订单中...'; });
 
-  var tip = document.getElementById('paywallTip');
   var params = getBaziParamsFromURL();
 
   fetch(API_BASE + '/create-order', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      year: params.year,
-      month: params.month,
-      day: params.day,
-      hour: params.hour,
-      gender: params.gender,
-      amount: 9.9
+      year: params.year, month: params.month, day: params.day,
+      hour: params.hour, gender: params.gender, amount: 9.9
     })
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
+    if (data.error) {
+      allBtns.forEach(function(b) { b.disabled = false; b.textContent = '创建失败，请重试'; });
+      showTip('创建订单失败: ' + data.error);
+      return;
+    }
     _orderId = data.orderId;
-    allBtns.forEach(function(b) { b.textContent = '模拟支付中...'; });
-    if (tip) { tip.style.display = 'block'; tip.textContent = '开发模式：自动模拟支付成功'; }
+    allBtns.forEach(function(b) { b.textContent = '等待支付...'; });
 
-    setTimeout(function() { simulatePay(); }, 500);
+    // 弹出二维码
+    showQrModal(data.qrcode || data.payUrl, data.amount);
+    // 开始轮询
+    startPolling();
   })
   .catch(function(e) {
     allBtns.forEach(function(b) { b.disabled = false; b.textContent = '网络错误，请重试'; });
-    if (tip) { tip.style.display = 'block'; tip.textContent = '错误: ' + e.message; }
+    showTip('网络错误，请刷新重试');
   });
 }
 
-// ---- 模拟支付 (上线后删除) ----
-function simulatePay() {
-  var tip = document.getElementById('paywallTip');
-  if (tip) tip.textContent = '验证支付结果...';
+// ---- 轮询支付状态 ----
+function startPolling() {
+  stopPolling();
+  _pollTimer = setInterval(function() {
+    fetch(API_BASE + '/check-order?orderId=' + _orderId)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.status === 'paid' && data.token) {
+          stopPolling();
+          onPaymentSuccess(data.token);
+        }
+      })
+      .catch(function() { /* ignore */ });
+  }, POLL_INTERVAL);
+}
 
-  fetch(API_BASE + '/check-order?orderId=' + _orderId + '&action=pay')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data.status === 'paid' && data.token) {
-        onPaymentSuccess(data.token);
-      } else {
-        if (tip) tip.textContent = '支付验证失败，请刷新重试';
-      }
-    })
-    .catch(function(e) {
-      if (tip) tip.textContent = '网络错误: ' + e.message;
-    });
+function stopPolling() {
+  if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
 }
 
 // ---- 支付成功 ----
@@ -158,6 +152,40 @@ function onPaymentSuccess(token) {
   if (typeof renderPaidContent === 'function') {
     renderPaidContent();
   }
+}
+
+// ---- 二维码弹窗 ----
+function showQrModal(qrUrl, amount) {
+  // 回收旧弹窗
+  hideQrModal();
+
+  // 生成二维码图片（用quickchart API把文本转成二维码）
+  var qrImgSrc = 'https://api.quickchart.io/qr?size=200&text=' + encodeURIComponent(qrUrl);
+
+  var modal = document.createElement('div');
+  modal.id = 'payQrModal';
+  modal.innerHTML = ''
+    + '<div class="payqr-backdrop" onclick="closeQrModal()"></div>'
+    + '<div class="payqr-dialog">'
+    +   '<div class="payqr-close" onclick="closeQrModal()">✕</div>'
+    +   '<div class="payqr-title">扫码支付 ' + amount + ' 元</div>'
+    +   '<div class="payqr-sub">微信 / 支付宝 均可扫码</div>'
+    +   '<img class="payqr-img" src="' + qrImgSrc + '" alt="支付二维码" />'
+    +   '<div class="payqr-tip">支付完成后将自动解锁全部内容</div>'
+    + '</div>';
+  document.body.appendChild(modal);
+}
+
+function hideQrModal() {
+  var old = document.getElementById('payQrModal');
+  if (old) old.remove();
+}
+
+function closeQrModal() {
+  hideQrModal();
+  stopPolling();
+  var allBtns = document.querySelectorAll('.paywall-btn');
+  allBtns.forEach(function(b) { b.disabled = false; b.textContent = '解锁全部内容'; });
 }
 
 // ---- token 验证 ----
@@ -171,17 +199,19 @@ function verifyAndUnlock(token) {
   .then(function(data) {
     if (data.valid) {
       hidePaywall();
-      if (typeof renderPaidContent === 'function') {
-        renderPaidContent();
-      }
+      if (typeof renderPaidContent === 'function') renderPaidContent();
     } else {
       clearSaved();
       showPaywall();
     }
   })
-  .catch(function() {
-    showPaywall();
-  });
+  .catch(function() { showPaywall(); });
+}
+
+// ---- 提示文本 ----
+function showTip(msg) {
+  var tip = document.getElementById('paywallTip');
+  if (tip) { tip.style.display = 'block'; tip.textContent = msg; }
 }
 
 // ---- 本地存储 ----
@@ -211,10 +241,7 @@ function clearSaved() {
 function hashParams(p) {
   var s = [p.year, p.month, p.day, p.hour, p.gender].join('|');
   var h = 0;
-  for (var i = 0; i < s.length; i++) {
-    h = ((h << 5) - h) + s.charCodeAt(i);
-    h |= 0;
-  }
+  for (var i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; }
   return 'bz_' + Math.abs(h).toString(36);
 }
 
