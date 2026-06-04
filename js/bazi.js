@@ -2389,6 +2389,147 @@ function analyzeFortune(bazi, gender) {
     return { years: yearResults, dayGan: DAY, dyInfo: dyInfo };
 }
 
+// ==================== 今年运势详细分析 ====================
+function analyzeThisYear(bazi, gender) {
+    var DAY = bazi.day.gan, DAY_WX = WU_XING[DAY];
+    var currentYear = new Date().getFullYear();
+    var yp = getYearPillar(currentYear, 6, 15);
+    var ss = getShiShen(DAY, yp.gan);
+    var isMale = gender === 'male';
+
+    // 日主旺衰
+    var wxSheng = { '木':'水','火':'木','土':'火','金':'土','水':'金' };
+    var woKe = { '木':'土','火':'金','土':'水','金':'木','水':'火' };
+    var guanWX = { '木':'金','火':'水','土':'木','金':'火','水':'土' };
+    var wxSHENG = { '木':'火','火':'土','土':'金','金':'水','水':'木' };
+    var helpWX = wxSheng[DAY_WX], sameWX = DAY_WX;
+    var caiWX = woKe[DAY_WX], shiShangWX = wxSHENG[DAY_WX];
+
+    var wangScore = 0;
+    ['year','month','day','hour'].forEach(function(pos) {
+        var gWx = WU_XING[bazi[pos].gan];
+        if (gWx === sameWX) wangScore += 1;
+        if (gWx === helpWX) wangScore += 0.5;
+        getCangGan(bazi[pos].zhi).forEach(function(g) {
+            var gw = WU_XING[g];
+            if (gw === sameWX) wangScore += 0.5;
+            if (gw === helpWX) wangScore += 0.25;
+        });
+    });
+    var isStrong = wangScore >= 3;
+    var favorableSet = isStrong
+        ? [caiWX, shiShangWX, guanWX[DAY_WX]]
+        : [helpWX, sameWX];
+
+    var yrWX = WU_XING[yp.gan];
+    var isFavorable = favorableSet.indexOf(yrWX) >= 0;
+
+    // 冲合检测
+    var CHONG_MAP = { '子午':true,'午子':true,'丑未':true,'未丑':true,'寅申':true,'申寅':true,'卯酉':true,'酉卯':true,'辰戌':true,'戌辰':true,'巳亥':true,'亥巳':true };
+    var HE_MAP = { '子丑':true,'丑子':true,'寅亥':true,'亥寅':true,'卯戌':true,'戌卯':true,'辰酉':true,'酉辰':true,'巳申':true,'申巳':true,'午未':true,'未午':true };
+
+    var chongPillars = [], hePillars = [];
+    ['year','month','day','hour'].forEach(function(pos) {
+        var pz = bazi[pos].zhi;
+        if (CHONG_MAP[yp.zhi + pz]) chongPillars.push(pos);
+        if (HE_MAP[yp.zhi + pz]) hePillars.push(pos);
+    });
+
+    // 十神大白话
+    var ssStories = {
+        '正官': { good:'今年是正官年，事业上容易得到认可，适合争取升职、考证、面试。做事有章法，容易获得上级信任。感情方面也是适合谈婚论嫁的一年。', bad:'但责任也会加重，压力山大。可能有人对你期望很高，自己别把自己逼得太紧。工作中注意不要越权或跟领导对着干。', health:'思虑过度容易失眠头痛，颈椎腰椎需要注意。建议每天给自己留半小时放空的时间。' },
+        '七杀': { good:'今年七杀当值，挑战和机遇并存。创业者、自由职业者反而可能迎来突破。你的韧性会在这一年被逼出来，熬过去了就是质的飞跃。', bad:'压力是实实在在的——工作上的突发状况可能一个接一个。要注意小人暗算，重要文件合同多留个心眼。这一年不太适合做重大决定，能稳则稳。', health:'精神压力大是主要问题，容易出现焦虑、心悸。运动是很好的解压方式，哪怕每天走路半小时都比躺着强。注意肝胆和眼睛。' },
+        '正财': { good:'今年正财运不错，正职工资有上涨空间，理财计划容易落实。适合踏踏实实攒钱，别想着一口吃个胖子。感情上容易遇到合适的对象。', bad:'但如果太保守也可能错过一些好机会，该花的钱还是要花——比如提升自己的课程、重要的社交应酬，别省过头了。', health:'整体平稳，但久坐工作的人注意颈椎和腰椎。肠胃保养也要上心，规律饮食很重要。' },
+        '偏财': { good:'今年偏财运在线，容易遇到投资机会或者意外进账。社交圈扩大，人脉带来的机会比工资收入更可观。适合多出去走动、多跟人聊聊。', bad:'但花销也大得吓人——社交、人情、冲动消费控制不住的话，赚的可能还没花的多。投资理财上警惕高回报承诺，十有八九是坑。落袋为安。', health:'应酬多了以后，肝和胃是两大重灾区。少喝酒，饮食清淡一点，定期体检别拖着。' },
+        '正印': { good:'今年贵人运很旺，容易遇到愿意帮你的人——可能是长辈、上级或专业前辈。适合学习进修、考证书、做长远规划。内心比平时更平静从容。', bad:'但如果太安逸，容易失去紧迫感。别把太多希望寄托在别人身上，自己动起来才是真的。有时候想得太多做得太少也是个毛病。', health:'整体不错，但容易因为太舒服而疏于锻炼。注意体重管理，适量的有氧运动最好。' },
+        '偏印': { good:'今年脑子特别活跃，灵感多、创意足。适合搞研究、创作、学一门新技术。可能对玄学、哲学这类东西突然产生兴趣。独立项目的成功率比团队项目高。', bad:'但容易钻牛角尖，想得太多太深，有时候会把简单的问题复杂化。跟人沟通时少讲道理多讲感受，别让人觉得你太疏离。', health:'思虑过度伤脾，可能吃不下饭或者暴饮暴食两头极端。睡眠质量需要留意，别熬夜想事情。' },
+        '食神': { good:'今年整体比较轻松自在，压力小、心情好。适合发展兴趣爱好、锻炼身体、多陪家人。如果你从事创作类工作，今年的灵感会非常充沛。', bad:'唯一的风险就是太安逸了导致行动力下降。舒服是福，但别躺平——该做的事还是要做，别拖到年底才后悔。', health:'整体很好，适合把运动习惯在今年固定下来。消化系统顺畅，胃口好但注意别吃太多。' },
+        '伤官': { good:'今年你的才华会藏不住，表达欲爆棚——如果你做的是创作、演讲、教学类工作，今年是出作品的好时机。思维比平时更跳脱，更适合创新突破。', bad:'但说话容易不过脑子——不是恶意的，但确实可能得罪人而不自知。职场中注意不要跟上级正面冲突，有话好好说。不太适合裸辞，除非下一家已经谈妥。', health:'用脑过度会头疼，嗓子也要注意保护。情绪波动比平时大，建议找到适合自己的发泄渠道。' },
+        '比肩': { good:'今年社交圈子在扩大，认识的人比往年多。独立性增强，适合一个人扛的项目。在朋友堆里比较活跃，可能会有小圈子里的领导机会。', bad:'开销也会同步上升——朋友往来、聚餐聚会，钱不知不觉就出去了。借钱给别人要格外慎重，今年尤其容易收不回来。同辈之间竞争也加剧了，心态放平。', health:'体力消耗大，容易疲惫。注意别透支身体去社交，该休息就休息。骨骼关节需要留意。' },
+        '劫财': { good:'今年适合团队合作——虽然是竞争年，但找到对的合伙人反而能共赢。精力旺盛，行动力比平时强，能做不少事。', bad:'但是破财风险很高，不是丢东西就是被借走不还，或者冲动消费买一堆用不上的。职场里注意防小人，有人可能会抢你的功劳。合作签字之前仔细看清楚每个条款。', health:'精力旺盛但容易用力过猛，肌肉拉伤、扭伤这类意外比较常见。运动前做好热身。' }
+    };
+    var story = ssStories[ss] || { good:'今年运势总体平稳，没有大风大浪。', bad:'平平淡淡就是福，别焦虑。', health:'身体无大碍，保持平时习惯就好。' };
+
+    // 冲合影响
+    var chongWarnings = [];
+    var heGoods = [];
+    var chongHealth = [];
+    ['year','month','day','hour'].forEach(function(pos) {
+        var posName = { year:'祖上/家庭根基', month:'事业/工作', day:'感情/婚姻', hour:'子女/内心' };
+        if (CHONG_MAP[yp.zhi + bazi[pos].zhi]) {
+            if (pos === 'day') {
+                chongWarnings.push('今年流年跟你的夫妻宫相冲，感情上可能会有波动——不是一定会出问题，但需要多沟通、多包容。已婚的别在气头上说重话，单身的别急着做决定。居住环境也可能有变动，比如搬家或装修。');
+                chongHealth.push('感情波动会影响睡眠和情绪，注意别把心里的气往身体上撒。');
+            } else if (pos === 'month') {
+                chongWarnings.push('今年流年跟事业宫相冲，工作环境可能会有调整——部门调动、换领导、甚至跳槽。不是坏事，但过程会有点颠簸。宜静不宜动，看清楚了再出手。');
+            } else if (pos === 'year') {
+                chongWarnings.push('今年流年跟年柱相冲，家里可能有些事需要你操心——长辈身体、家庭关系、房产相关的事都值得多留意。');
+            }
+        }
+        if (HE_MAP[yp.zhi + bazi[pos].zhi]) {
+            if (pos === 'day') {
+                heGoods.push('今年流年跟你的夫妻宫相合，人际关系运很好——感情顺利，容易遇到聊得来的人，已有伴侣的也会更亲密。也是一个适合合作、合伙的年份。');
+            } else if (pos === 'month') {
+                heGoods.push('今年流年跟事业宫相合，工作上容易遇到帮手和贵人，合作项目特别顺利。');
+            }
+        }
+    });
+
+    // 健康状况详细
+    var wxHealth = {
+        '木': { strong:'肝胆功能偏旺，注意少喝酒、少熬夜，春天容易上火。', weak:'肝气不足，容易疲劳犯困，早上起床困难。多吃绿色蔬菜补一补。', organ:'肝胆、筋腱、眼睛' },
+        '火': { strong:'心火偏旺，容易心烦气躁、口腔溃疡。夏天注意防暑，少喝咖啡浓茶。', weak:'心力不足，容易心慌气短，体检查一下心脏相关指标。', organ:'心脏、小肠、血管' },
+        '土': { strong:'脾胃消化功能旺盛但容易积食，饮食规律比什么都重要。夏天注意湿热。', weak:'脾胃虚弱，容易腹胀消化不良，冷的少吃。面食比米饭好消化。', organ:'脾胃、肌肉、口腔' },
+        '水': { strong:'肾气足但容易水肿，冬天注意保暖别冻着。喝水适量就好别猛灌。', weak:'肾气不足，容易腰酸背痛、怕冷、精力不济。早睡比吃补药管用。', organ:'肾脏、膀胱、骨骼' },
+        '金': { strong:'肺气偏旺但容易干燥——喉咙干、皮肤干，秋天注意润肺。', weak:'肺气不足，容易感冒咳嗽，换季时候多注意保暖防寒。', organ:'肺、大肠、皮肤' }
+    };
+    var hInfo = wxHealth[DAY_WX] || wxHealth['木'];
+    var healthMain = isStrong ? hInfo.strong : hInfo.weak;
+    var healthSummary = '今年重点养护部位：' + hInfo.organ + '。' + healthMain;
+
+    // 额外健康提醒
+    var healthExtra = [];
+    if (ss === '七杀' || ss === '正官') healthExtra.push('官杀年精神长期紧绷，容易偏头痛、失眠，建议每天做几分钟深呼吸放松。');
+    if (ss === '偏财' || ss === '劫财') healthExtra.push('应酬和奔波多，肠胃和肝脏负担加重——吃饭尽量规律，酒后多喝温水。');
+    if (ss === '伤官' || ss === '偏印') healthExtra.push('用脑过度容易头晕、注意力不集中，每隔一小时站起来走走能缓解很多。');
+    if (chongPillars.length > 0) healthExtra.push('冲太岁的一年身体容易出现小意外——开车慢一点，运动前热身要充分，别太拼。');
+
+    // 机会
+    var opportunities = [];
+    if (isFavorable || ss === '正财' || ss === '正官' || ss === '正印' || ss === '食神') {
+        opportunities.push('事业上今年是稳步前进的一年——该争取的要争取，别太谦虚。上半年适合定计划，下半年适合执行。');
+    }
+    if (ss === '偏财' || ss === '伤官' || ss === '食神') {
+        opportunities.push('今年适合拓展副业或者学一门新技能——你的创造力在这一年会被激活，学到的东西未来能变现。');
+    }
+    if (hePillars.length > 0) {
+        opportunities.push('今年你的人缘运不错，容易遇到贵人——多出去走动、参加行业交流，你需要的帮助会从这些人里出现。');
+    }
+    if (ss === '七杀' || ss === '劫财') {
+        opportunities.push('虽然今年压力不小，但危机也是转机——很多人在这种年份反而被逼出了潜力。创业者、自由职业者尤其有机会弯道超车。');
+    }
+    if (isFavorable) {
+        opportunities.push('今年整体是利好年，流年五行跟你比较合——做什么比别人顺手一些。趁势而为，别浪费好运气。');
+    } else {
+        opportunities.push('今年运势偏紧，适合修炼内功——把基础打牢、把手里已有的资源用好，别急着扩张。积蓄力量比盲目冲刺更重要。');
+    }
+    if (opportunities.length === 0) opportunities.push('今年稳扎稳打就是最好的策略。日常工作生活按节奏来，别给自己太大压力。');
+
+    return {
+        year: currentYear,
+        gan: yp.gan, zhi: yp.zhi,
+        shiShen: ss,
+        isFavorable: isFavorable,
+        story: story,
+        chongWarnings: chongWarnings,
+        heGoods: heGoods,
+        healthSummary: healthSummary,
+        healthExtra: healthExtra,
+        opportunities: opportunities,
+        dyInfo: ''
+    };
+}
+
 // ==================== 学业分析 ====================
 function analyzeStudy(bazi) {
     const DAY = bazi.day.gan;
@@ -2525,5 +2666,6 @@ window.BaZiCalculator = {
     analyzeCharacter: analyzeCharacter,
     analyzeWealth: analyzeWealth,
     analyzeFortune: analyzeFortune,
+    analyzeThisYear: analyzeThisYear,
     analyzeStudy: analyzeStudy
 };

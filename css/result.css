@@ -1422,6 +1422,80 @@
     letter-spacing: 1px;
 }
 
+/* ---- 付费遮罩（嵌在 drawer-body 内部） ---- */
+.drawer-body { position: relative; }
+
+/* 付费板块强制撑开内容区，确保遮罩完整可见 */
+.drawer-body.paywall-active {
+    min-height: 220px;
+    max-height: none !important;
+    overflow: visible !important;
+    transition: none !important;
+}
+
+.paywall-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10, 12, 22, 0.88);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: 0 0 3px 3px;
+    min-height: 160px;
+}
+
+.paywall-card {
+    text-align: center;
+    padding: 20px 20px 24px;
+    max-width: 280px;
+}
+
+.paywall-card-title {
+    font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+    font-size: 20px; color: var(--gold);
+    letter-spacing: 4px; margin-bottom: 6px;
+}
+
+.paywall-card-sub {
+    font-size: 11px; color: var(--text-dim);
+    letter-spacing: 1px;
+}
+
+.paywall-price { margin-bottom: 14px; }
+
+.paywall-current {
+    font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+    font-size: 24px; color: var(--gold); font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.paywall-btn {
+    display: inline-block;
+    padding: 9px 32px;
+    background: rgba(212,175,55,0.12);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-size: 14px; font-weight: 600; letter-spacing: 2px;
+    border-radius: 2px; cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    -webkit-appearance: none;
+}
+.paywall-btn:hover {
+    background: rgba(212,175,55,0.22);
+}
+.paywall-btn:disabled {
+    opacity: 0.5; cursor: not-allowed;
+}
+
+.paywall-tip {
+    font-size: 11px; color: var(--text-dim);
+    line-height: 1.6;
+}
+
 /* ---- 响应式（手机适配） ---- */
 @media (max-width: 600px) {
     .result-container { padding: 12px 8px 40px; }

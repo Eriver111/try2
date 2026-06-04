@@ -43,6 +43,7 @@ let _params = null;       // URL参数（供后续函数使用）
 // ==================== 主渲染 ====================
 function render(data) {
     const bazi = data.bazi;
+    _bazi = bazi;  // 存储供 renderPaidContent 使用
     const dayGan = bazi.day.gan;
     const currentYear = new Date().getFullYear();
 
@@ -99,28 +100,50 @@ function render(data) {
     renderCharacter(bazi);
     document.getElementById('characterSection').classList.add('drawer-open');
 
-    // 婚姻感情（夫妻宫+配偶年龄合并）
-    renderMarriage(bazi, _params.gender);
-    document.getElementById('marriageSection').classList.add('drawer-open');
-
     // 父母关系
     renderParents(bazi, _params.gender);
     document.getElementById('parentsSection').classList.add('drawer-open');
 
-    // 财运分析
-    renderWealth(bazi, _params.gender);
-    document.getElementById('wealthSection').classList.add('drawer-open');
-
-    // 流年运势
-    renderFortune(bazi, _params.gender);
-    document.getElementById('fortuneSection').classList.add('drawer-open');
-
-    // 学业分析
-    renderStudy(bazi);
-    document.getElementById('studySection').classList.add('drawer-open');
+    // ---- 付费板块暂时不渲染 ----
+    // 今年运势、婚姻感情、财运分析、学业分析、近五年流年运势
+    // 这些由 renderPaidContent() 在付费后渲染
 
     // 神煞统计
     document.getElementById('shenshaCount').textContent = '（共' + data.shenSha.length + '项）';
+
+    // 初始化付费遮罩
+    initPaywall({
+        year: _params.year,
+        month: _params.month,
+        day: _params.day,
+        hour: _params.hour,
+        gender: _params.gender
+    });
+}
+
+// ---- 付费内容渲染 (由 paywall 在解锁后调用) ----
+function renderPaidContent() {
+    if (!_bazi || !_params) return;
+
+    // 今年运势
+    renderThisYear(_bazi, _params.gender);
+    document.getElementById('thisYearSection').classList.add('drawer-open');
+
+    // 婚姻感情
+    renderMarriage(_bazi, _params.gender);
+    document.getElementById('marriageSection').classList.add('drawer-open');
+
+    // 财运分析
+    renderWealth(_bazi, _params.gender);
+    document.getElementById('wealthSection').classList.add('drawer-open');
+
+    // 学业分析
+    renderStudy(_bazi);
+    document.getElementById('studySection').classList.add('drawer-open');
+
+    // 近五年流年运势
+    renderFortune(_bazi, _params.gender);
+    document.getElementById('fortuneSection').classList.add('drawer-open');
 }
 
 // ==================== 大运渲染 ====================
@@ -822,6 +845,82 @@ function renderCharacter(bazi) {
         // 十神综合
         + '<div style="font-size:13px;color:var(--text-secondary);line-height:2.2;padding:14px 16px;background:rgba(212,175,55,.03);border:1px solid rgba(212,175,55,.1);border-radius:2px">'
         +   '<p style="margin:0">' + ssAdvice + '</p>'
+        + '</div>';
+}
+
+// ==================== 今年运势渲染 ====================
+function renderThisYear(bazi, gender) {
+    var ty = window.BaZiCalculator.analyzeThisYear(bazi, gender);
+    var el = document.getElementById('thisYearContent');
+    if (!el) return;
+
+    var labelColor = ty.isFavorable ? '#81C784' : '#feca57';
+
+    // 吉/凶标签
+    var overallTag = ty.isFavorable ? '利好' : '偏紧';
+    var overallColor = ty.isFavorable ? '#81C784' : '#feca57';
+
+    // 冲合警告
+    var chongHtml = '';
+    if (ty.chongWarnings && ty.chongWarnings.length > 0) {
+        chongHtml = '<div style="font-size:13px;color:#E57373;line-height:2;padding:14px 16px;background:rgba(244,67,54,.04);border:1px solid rgba(244,67,54,.12);border-radius:3px;margin-bottom:12px">'
+            + '<div style="font-size:12px;font-weight:700;letter-spacing:2px;margin-bottom:6px">需要注意</div>'
+            + ty.chongWarnings.map(function(w) { return '<p style="margin:0 0 6px">-- ' + w + '</p>'; }).join('')
+            + '</div>';
+    }
+
+    var heHtml = '';
+    if (ty.heGoods && ty.heGoods.length > 0) {
+        heHtml = '<div style="font-size:13px;color:#81C784;line-height:2;padding:14px 16px;background:rgba(76,175,80,.04);border:1px solid rgba(76,175,80,.12);border-radius:3px;margin-bottom:12px">'
+            + '<div style="font-size:12px;font-weight:700;letter-spacing:2px;margin-bottom:6px">好兆头</div>'
+            + ty.heGoods.map(function(g) { return '<p style="margin:0 0 6px">-- ' + g + '</p>'; }).join('')
+            + '</div>';
+    }
+
+    // 机会
+    var oppHtml = '';
+    if (ty.opportunities && ty.opportunities.length > 0) {
+        oppHtml = '<div style="font-size:13px;color:var(--text-primary);line-height:2;padding:14px 16px;background:rgba(20,25,40,.4);border:1px solid rgba(212,175,55,.06);border-radius:3px;margin-bottom:12px">'
+            + '<div style="font-size:12px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">今年可能的机会</div>'
+            + ty.opportunities.map(function(o, i) { return '<p style="margin:0 0 6px">' + (i+1) + '. ' + o + '</p>'; }).join('')
+            + '</div>';
+    }
+
+    el.innerHTML = ''
+        // 标题行
+        + '<div style="text-align:center;margin-bottom:18px">'
+        +   '<div style="font-family:\'ZCOOL XiaoWei\',\'Noto Serif SC\',serif;font-size:24px;letter-spacing:4px;color:var(--gold);margin-bottom:4px">' + ty.year + ' 年运势</div>'
+        +   '<div style="font-size:13px;color:var(--text-dim);letter-spacing:2px">'
+        +     '流年 <span style="color:' + overallColor + ';font-weight:700">' + ty.gan + ty.zhi + '</span>'
+        +     ' · 十神 <span style="color:var(--text-primary);font-weight:700">' + ty.shiShen + '</span>'
+        +   '</div>'
+        + '</div>'
+
+        // 概括
+        + '<div style="font-size:14px;color:var(--text-primary);line-height:2.2;padding:16px 18px;background:rgba(20,25,40,.5);border:1px solid rgba(212,175,55,.08);border-radius:3px;margin-bottom:14px">'
+        +   '<p style="margin:0">' + ty.story.good + '</p>'
+        + '</div>'
+
+        // 规避
+        + '<div style="font-size:13px;color:var(--text-primary);line-height:2.2;padding:14px 16px;background:rgba(244,67,54,.03);border:1px solid rgba(244,67,54,.08);border-radius:3px;margin-bottom:12px">'
+        +   '<p style="margin:0"><span style="color:#E57373;font-weight:700;letter-spacing:2px">需要回避的</span></p>'
+        +   '<p style="margin:0">' + ty.story.bad + '</p>'
+        + '</div>'
+
+        + chongHtml
+        + heHtml
+        + oppHtml
+
+        // 健康
+        + '<div style="font-size:13px;color:var(--text-primary);line-height:2.2;padding:14px 16px;background:rgba(255,193,7,.03);border:1px solid rgba(255,193,7,.1);border-radius:3px;margin-bottom:12px">'
+        +   '<p style="margin:0 0 6px"><span style="color:#feca57;font-weight:700;letter-spacing:2px">身体状况</span></p>'
+        +   '<p style="margin:0">' + ty.healthSummary + '</p>'
+        +   (ty.healthExtra && ty.healthExtra.length > 0 ? '<p style="margin:8px 0 0;color:var(--text-secondary)">' + ty.healthExtra.join(' ') + '</p>' : '')
+        + '</div>'
+
+        // 总结
+        + '<div style="font-size:12px;color:var(--text-secondary);line-height:2;padding:12px 16px;background:rgba(212,175,55,.03);border:1px solid rgba(212,175,55,.1);border-radius:3px">'
+        +   '<p style="margin:0">以上分析基于命理学的流年推算，每个人的实际经历会因自身选择和环境影响而不同。不管你信不信，都愿你今年平安顺遂。</p>'
         + '</div>';
 }
 
