@@ -3,8 +3,8 @@
  * zpayz 异步回调：支付成功后通知我们。
  * 验证签名 → 标记订单已付 → 生成令牌 → 返回 success
  */
-const store = require('../lib/store');
-const pay = require('../lib/pay');
+const store = require('./_lib/store');
+const pay = require('./_lib/pay');
 
 module.exports = async function handler(req, res) {
   try {

@@ -5,7 +5,7 @@
  * 入参: { token, baziHash }
  * 返回: { valid, orderId }
  */
-const store = require('../lib/store');
+const store = require('./_lib/store');
 
 module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();

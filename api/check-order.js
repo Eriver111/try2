@@ -5,8 +5,8 @@
  * 入参: ?orderId=xxx
  * 返回: { orderId, status, token }
  */
-const store = require('../lib/store');
-const pay = require('../lib/pay');
+const store = require('./_lib/store');
+const pay = require('./_lib/pay');
 
 module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
