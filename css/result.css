@@ -1427,24 +1427,31 @@
 
 /* 付费板块强制撑开内容区，确保遮罩完整可见 */
 .drawer-body.paywall-active {
-    min-height: 220px;
-    max-height: none !important;
-    overflow: visible !important;
+    min-height: 300px;
+    max-height: 420px !important;
+    overflow: hidden !important;
     transition: none !important;
 }
 
 .paywall-overlay {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(10, 12, 22, 0.88);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background: linear-gradient(to bottom,
+        transparent 0%,
+        transparent 18%,
+        rgba(10,12,22,0.15) 25%,
+        rgba(10,12,22,0.45) 38%,
+        rgba(10,12,22,0.75) 50%,
+        rgba(10,12,22,0.9) 62%,
+        rgba(10,12,22,0.96) 75%,
+        rgba(10,12,22,0.98) 100%
+    );
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
+    padding-bottom: 16px;
     z-index: 10;
     border-radius: 0 0 3px 3px;
-    min-height: 160px;
 }
 
 .paywall-card {
@@ -1548,6 +1555,17 @@
     /* 顶部信息 */
     .nayin-info { font-size: 12px; flex-wrap: wrap; gap: 4px; }
     .info-sep { margin: 0 4px; }
+   .share-btn {
+    display: inline-block; margin-top: 12px; padding: 5px 16px;
+    font-size: 12px; color: var(--gold);
+    background: rgba(212,175,55,0.06);
+    border: 1px solid rgba(212,175,55,0.15);
+    border-radius: 2px; cursor: pointer;
+    letter-spacing: 1px; transition: all 0.2s;
+    font-family: inherit;
+}
+.share-btn:hover { background: rgba(212,175,55,0.14); }
+.share-btn.copied { color: #4ade80; border-color: rgba(74,222,128,0.3); }
 
     /* 四柱表格 */
     .pp-label { flex: 0 0 42px; font-size: 10px; }
