@@ -269,5 +269,15 @@
     <script src="js/bg-animation.js"></script>
     <script src="js/result.js"></script>
     <script src="js/paywall.js"></script>
+    <script>
+function shareResult() {
+    var btn = document.querySelector('.share-btn');
+    var url = window.location.href;
+    navigator.clipboard.writeText(url).then(function() {
+        btn.textContent = '✓ 已复制链接'; btn.classList.add('copied');
+        setTimeout(function() { btn.textContent = '🔗 分享命盘'; btn.classList.remove('copied'); }, 2000);
+    });
+}
+</script>
 </body>
 </html>
