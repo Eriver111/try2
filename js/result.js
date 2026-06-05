@@ -104,26 +104,13 @@ function render(data) {
     renderParents(bazi, _params.gender);
     document.getElementById('parentsSection').classList.add('drawer-open');
 
-        // 付费板块（先渲染完整内容，遮罩渐变只挡下半部分）
-    renderThisYear(bazi, _params.gender);
-    document.getElementById('thisYearSection').classList.add('drawer-open');
-
-    renderMarriage(bazi, _params.gender);
-    document.getElementById('marriageSection').classList.add('drawer-open');
-
-    renderWealth(bazi, _params.gender);
-    document.getElementById('wealthSection').classList.add('drawer-open');
-
-    renderStudy(bazi);
-    document.getElementById('studySection').classList.add('drawer-open');
-
-    renderFortune(bazi, _params.gender);
-    document.getElementById('fortuneSection').classList.add('drawer-open');
+    // 付费板块：解锁后才渲染（避免内容撑开抽屉）
+    // 由 renderPaidContent() 在付费后渲染
 
     // 神煞统计
     document.getElementById('shenshaCount').textContent = '（共' + data.shenSha.length + '项）';
 
-    // 初始化付费遮罩
+    // 初始化付费遮罩（渐变模糊，透出前两行）
     initPaywall({
         year: _params.year,
         month: _params.month,
@@ -136,24 +123,14 @@ function render(data) {
 // ---- 付费内容渲染 (由 paywall 在解锁后调用) ----
 function renderPaidContent() {
     if (!_bazi || !_params) return;
-
-    // 今年运势
     renderThisYear(_bazi, _params.gender);
     document.getElementById('thisYearSection').classList.add('drawer-open');
-
-    // 婚姻感情
     renderMarriage(_bazi, _params.gender);
     document.getElementById('marriageSection').classList.add('drawer-open');
-
-    // 财运分析
     renderWealth(_bazi, _params.gender);
     document.getElementById('wealthSection').classList.add('drawer-open');
-
-    // 学业分析
     renderStudy(_bazi);
     document.getElementById('studySection').classList.add('drawer-open');
-
-    // 近五年流年运势
     renderFortune(_bazi, _params.gender);
     document.getElementById('fortuneSection').classList.add('drawer-open');
 }
