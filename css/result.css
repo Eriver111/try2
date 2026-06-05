@@ -1448,18 +1448,18 @@
 
 /* 付费板块强制撑开内容区，确保遮罩完整可见 */
 .drawer-body.paywall-active {
-    min-height: 0;
-    max-height: 0 !important;
-    overflow: hidden !important;
+    min-height: 200px;
+    max-height: none !important;
+    overflow: visible !important;
     transition: none !important;
 }
 
 .paywall-overlay {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(10, 12, 22, 0.95);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    background: rgba(10, 12, 22, 0.96);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     display: flex;
     align-items: flex-end;
     justify-content: center;
