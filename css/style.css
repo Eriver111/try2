@@ -273,6 +273,15 @@ body {
     color: var(--text-dim);
     letter-spacing: 1px;
 }
+.form-example {
+    font-size: 12px; color: var(--gold); opacity: 0.8;
+    letter-spacing: 1px; margin-top: 6px; padding: 8px 14px;
+    background: rgba(212,175,55,0.06);
+    border: 1px solid rgba(212,175,55,0.12);
+    border-radius: 2px; display: inline-block;
+}
+.form-example strong { font-weight: 700; }
+.form-example em { font-style: normal; color: var(--text-primary); }
 
 /* 表单布局 */
 .birth-form {
