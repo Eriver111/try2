@@ -1449,7 +1449,7 @@
 /* 付费板块强制撑开内容区，确保遮罩完整可见 */
 .drawer-body.paywall-active {
     min-height: 300px;
-    max-height: 350px !important;
+    max-height: 280px !important;
     overflow: hidden !important;
     transition: none !important;
 }
@@ -1459,12 +1459,12 @@
     top: 0; left: 0; right: 0; bottom: 0;
     background: linear-gradient(to bottom,
         transparent 0%,
-        transparent 6%,
-        rgba(10,12,22,0.4) 12%,
-        rgba(10,12,22,0.72) 20%,
-        rgba(10,12,22,0.9) 30%,
-        rgba(10,12,22,0.97) 42%,
-        rgba(10,12,22,0.99) 100%
+        transparent 3%,
+        rgba(10,12,22,0.55) 7%,
+        rgba(10,12,22,0.85) 13%,
+        rgba(10,12,22,0.96) 20%,
+        rgba(10,12,22,0.99) 30%,
+        rgba(10,12,22,1) 100%
     );
     display: flex;
     align-items: flex-end;
