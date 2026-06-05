@@ -282,6 +282,14 @@ body {
 }
 .form-example strong { font-weight: 700; }
 .form-example em { font-style: normal; color: var(--text-primary); }
+.trust-signals {
+    display: flex; gap: 16px; justify-content: center;
+    margin-top: 10px; flex-wrap: wrap;
+}
+.trust-signals span {
+    font-size: 11px; color: var(--text-dim);
+    letter-spacing: 1px; opacity: 0.7;
+}
 
 /* 表单布局 */
 .birth-form {
