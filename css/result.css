@@ -1448,7 +1448,7 @@
 
 /* 付费板块强制撑开内容区，确保遮罩完整可见 */
 .drawer-body.paywall-active {
-    min-height: 150px;
+    min-height: 120px;
     max-height: none !important;
     overflow: visible !important;
     transition: none !important;
