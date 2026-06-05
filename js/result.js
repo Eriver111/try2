@@ -104,9 +104,21 @@ function render(data) {
     renderParents(bazi, _params.gender);
     document.getElementById('parentsSection').classList.add('drawer-open');
 
-    // ---- 付费板块暂时不渲染 ----
-    // 今年运势、婚姻感情、财运分析、学业分析、近五年流年运势
-    // 这些由 renderPaidContent() 在付费后渲染
+        // 付费板块（先渲染完整内容，遮罩渐变只挡下半部分）
+    renderThisYear(bazi, _params.gender);
+    document.getElementById('thisYearSection').classList.add('drawer-open');
+
+    renderMarriage(bazi, _params.gender);
+    document.getElementById('marriageSection').classList.add('drawer-open');
+
+    renderWealth(bazi, _params.gender);
+    document.getElementById('wealthSection').classList.add('drawer-open');
+
+    renderStudy(bazi);
+    document.getElementById('studySection').classList.add('drawer-open');
+
+    renderFortune(bazi, _params.gender);
+    document.getElementById('fortuneSection').classList.add('drawer-open');
 
     // 神煞统计
     document.getElementById('shenshaCount').textContent = '（共' + data.shenSha.length + '项）';
