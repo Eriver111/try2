@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/result.css">
     <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;600;700;900&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
-<script defer src="https://cloud.umami.is/script.js" data-website-id="01428b1c-708d-4dce-bc78-beda633ab896"></script>
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="YOUR_UMAMI_ID"></script>
 </head>
 <body>
     <div class="bg-layer">
@@ -262,6 +262,7 @@
         <!-- 底部声明 -->
         <footer class="result-footer">
             <p>※ 本排盘结果仅供学习参考与娱乐交流，不构成任何决策建议</p>
+            <p class="contact-info">📱 有任何问题，请联系客服微信 vx：EriverLife</p>
         </footer>
     </div>
 
@@ -270,14 +271,22 @@
     <script src="js/result.js"></script>
     <script src="js/paywall.js"></script>
     <script>
-function shareResult() {
-    var btn = document.querySelector('.share-btn');
-    var url = window.location.href;
-    navigator.clipboard.writeText(url).then(function() {
-        btn.textContent = '✓ 已复制链接'; btn.classList.add('copied');
-        setTimeout(function() { btn.textContent = '🔗 分享命盘'; btn.classList.remove('copied'); }, 2000);
-    });
-}
-</script>
+    function shareResult() {
+        var btn = document.querySelector('.share-btn');
+        var url = window.location.href;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(function() {
+                btn.textContent = '✓ 已复制链接'; btn.classList.add('copied');
+                setTimeout(function() { btn.textContent = '🔗 分享命盘'; btn.classList.remove('copied'); }, 2000);
+            });
+        } else {
+            var ta = document.createElement('textarea'); ta.value = url;
+            document.body.appendChild(ta); ta.select();
+            document.execCommand('copy'); document.body.removeChild(ta);
+            btn.textContent = '✓ 已复制链接'; btn.classList.add('copied');
+            setTimeout(function() { btn.textContent = '🔗 分享命盘'; btn.classList.remove('copied'); }, 2000);
+        }
+    }
+    </script>
 </body>
 </html>
