@@ -556,9 +556,10 @@ function calculateDaYun(monthPillar, yearPillar, gender, birthYear, birthMonth, 
     const isMale = gender === 'male';
     const isForward = (yearGanIsYang && isMale) || (!yearGanIsYang && !isMale);
 
-    // 出生日期时间：小时折合为天的小数部分
-    const birthHourNum = (typeof birthHour === 'number') ? birthHour : 0;
-    const birthDateTime = birthDateToDecimal(birthYear, birthMonth, birthDay, birthHourNum);
+    // 出生日期时间：时辰索引（0-11）→ 真实钟点（0-23）
+    const hourMap = [0,2,4,6,8,10,12,14,16,18,20,22];
+    const birthClockHour = (typeof birthHour === 'number') ? (hourMap[birthHour] || 0) : 0;
+    const birthDateTime = birthDateToDecimal(birthYear, birthMonth, birthDay, birthClockHour);
 
     let targetJQ = null, diffDays = 0;
 
@@ -626,8 +627,9 @@ function calculateDaYun(monthPillar, yearPillar, gender, birthYear, birthMonth, 
             ganIdx = (monthPillar.ganIndex - (i + 1) + 100) % 10;
             zhiIdx = (monthPillar.zhiIndex - (i + 1) + 120) % 12;
         }
-        // 虚岁标签：传统命理以大运起始虚岁显示，实岁+1后向上取整
-        const showAge = Math.ceil(qiYunAge + 1) + i * 10;
+        // 虚岁标签：出生即1岁，立春前出生（属上一年）需额外+1岁
+        var preLiChun = (birthMonth < 2) || (birthMonth === 2 && birthDay < 5);
+        var showAge = Math.floor(qiYunAge + 1) + (preLiChun ? 1 : 0) + i * 10;
         const startYearExact = birthYear + qiYunAge + i * 10;
         const endYearExact = birthYear + qiYunAge + (i + 1) * 10;
 
