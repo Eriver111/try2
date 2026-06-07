@@ -1146,7 +1146,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     const bazi = window.BaZiCalculator.calculate(
-        _params.year, _params.month, _params.day, _params.hour, _params.gender
+        _params.year, _params.month, _params.day, _params.hour, _params.gender, _params.clock || 0
     );
     // 保存原始时辰供显示
     bazi.originalHour = originalHour;

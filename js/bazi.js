@@ -48,6 +48,16 @@ const NA_YIN = [
     '大溪水', '大溪水', '沙中土', '沙中土', '天上火', '天上火', '石榴木', '石榴木', '大海水', '大海水'
 ];
 
+// 立春近似时刻（北京时间小时数，精确到±30分钟，用于年柱/月柱的精确切换）
+// 数据来源：天文年历近似值
+var LICHUN_HOUR = {
+    1980:19,1981:5,1982:11,1983:17,1984:23,1985:5,1986:11,1987:17,1988:23,1989:4,
+    1990:10,1991:16,1992:22,1993:3,1994:9,1995:15,1996:21,1997:3,1998:8,1999:14,
+    2000:20,2001:2,2002:8,2003:14,2004:19,2005:1,2006:7,2007:13,2008:19,2009:0,
+    2010:6,2011:12,2012:18,2013:0,2014:6,2015:11,2016:17,2017:23,2018:5,2019:11,
+    2020:17,2021:23,2022:4,2023:10,2024:16,2025:22,2026:4,2027:10,2028:16,2029:21,2030:3
+};
+
 /**
  * 获取指定年份的12个「节」（月柱分界点）日期
  * 节不同于气，是月份的实际分界：
@@ -132,12 +142,14 @@ function getJieQiDates(year) {
     };
 
     if (preciseData[year]) {
-        const days = preciseData[year];
-        return baseJieQi.map((bq, i) => {
-            const m = bq.month;
-            const d = days[i];
-            const targetYear = (m === 1) ? year + 1 : year;
-            return { name: bq.name, date: new Date(targetYear, m - 1, d) };
+        var days = preciseData[year];
+        return baseJieQi.map(function(bq, i) {
+            var m = bq.month;
+            var d = days[i];
+            var targetYear = (m === 1) ? year + 1 : year;
+            // 立春返回带钟点（用于精确到时的年柱切换）
+            var h = (i === 0) ? (LICHUN_HOUR[year] || 12) : 0;
+            return { name: bq.name, date: new Date(targetYear, m - 1, d, h, 0, 0) };
         });
     }
 
@@ -162,11 +174,19 @@ function getJieQiDates(year) {
  * 计算年柱
  * 立春前属于上一年
  */
-function getYearPillar(year, month, day) {
-    // 简化处理：立春大约在2月4日左右
-    // 如果在立春之前，年柱属于上一年
-    let actualYear = year;
-    if (month < 2 || (month === 2 && day < 4)) {
+function getYearPillar(year, month, day, hour) {
+    // 获取该年立春的精确时刻
+    var jq = getJieQiDates(year);
+    var liChun = jq[0].date;
+    var liChunMonth = liChun.getMonth() + 1;
+    var liChunDay = liChun.getDate();
+    var liChunHour = liChun.getHours();
+
+    // 如果在立春时刻之前，年柱属于上一年
+    var actualYear = year;
+    if (month < liChunMonth || 
+        (month === liChunMonth && day < liChunDay) ||
+        (month === liChunMonth && day === liChunDay && (hour || 0) * 1 < liChunHour)) {
         actualYear = year - 1;
     }
     
@@ -189,7 +209,7 @@ function getYearPillar(year, month, day) {
  * 计算月柱
  * 根据节气确定月份
  */
-function getMonthPillar(year, month, day, hour) {
+function getMonthPillar(year, month, day, hour, clock) {
     // 根据节气精确确定月支
     // 获取该年的节气日期
     var jieQi = getJieQiDates(year);
@@ -201,6 +221,7 @@ function getMonthPillar(year, month, day, hour) {
     var liChun = jieQi[0].date;
     var realLiChunMonth = liChun.getMonth() + 1;
     var realLiChunDay = liChun.getDate();
+    var realLiChunHour = liChun.getHours();
     
     // 确定当前日期对应的月支索引
     // 月支顺序: 寅(2)卯(3)辰(4)巳(5)午(6)未(7)申(8)酉(9)戌(10)亥(11)子(0)丑(1)
@@ -208,8 +229,10 @@ function getMonthPillar(year, month, day, hour) {
     var zhiIndex;
     var yearForMonthGan = year; // 用于月干计算的"年"
     
-    // 先判断是否在立春之前（属于上一年）
-    if ((month < realLiChunMonth) || (month === realLiChunMonth && day < realLiChunDay)) {
+    // 先判断是否在立春时刻之前（属于上一年）
+    if ((month < realLiChunMonth) || 
+        (month === realLiChunMonth && day < realLiChunDay) ||
+        (month === realLiChunMonth && day === realLiChunDay && (clock || 0) < realLiChunHour)) {
         // 在立春之前，属于上一年的丑月(1)或之前的月份
         yearForMonthGan = year - 1;
         
@@ -406,10 +429,10 @@ function getCangGan(zhi) {
 /**
  * 主函数：计算八字
  */
-function calculateBaZi(year, month, day, hour, gender) {
+function calculateBaZi(year, month, day, hour, gender, clock) {
     // 计算四柱
-    const yearPillar = getYearPillar(year, month, day);
-    const monthPillar = getMonthPillar(year, month, day, hour);
+    const yearPillar = getYearPillar(year, month, day, clock || 0);
+    const monthPillar = getMonthPillar(year, month, day, hour, clock || 0);
     const dayPillar = getDayPillar(year, month, day);
     const hourPillar = getHourPillar(dayPillar.ganIndex, hour);
     
