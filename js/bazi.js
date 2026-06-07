@@ -190,58 +190,67 @@ function getYearPillar(year, month, day) {
  * 根据节气确定月份
  */
 function getMonthPillar(year, month, day, hour) {
-    // 简化版月柱计算
-    // 实际需要根据节气精确计算，这里使用公历月份近似值
+    // 根据节气精确确定月支
+    // 获取该年的节气日期
+    var jieQi = getJieQiDates(year);
     
-    // 月支映射：公历月份 → 地支在 DI_ZHI 数组中的索引
-    // 寅月(2,立春后)→寅(索引2) 卯月(3,惊蛰后)→卯(3) 辰月(4,清明后)→辰(4)
-    // 巳月(5,立夏后)→巳(5) 午月(6,芒种后)→午(6) 未月(7,小暑后)→未(7)
-    // 申月(8,立秋后)→申(8) 酉月(9,白露后)→酉(9) 戌月(10,寒露后)→戌(10)
-    // 亥月(11,立冬后)→亥(11) 子月(12,大雪后)→子(0) 丑月(1,小寒后)→丑(1)
-    const monthZhiMap = {
-        2: 2,   // 寅月
-        3: 3,   // 卯月
-        4: 4,   // 辰月
-        5: 5,   // 巳月
-        6: 6,   // 午月
-        7: 7,   // 未月
-        8: 8,   // 申月
-        9: 9,   // 酉月
-        10: 10, // 戌月
-        11: 11, // 亥月
-        12: 0,  // 子月
-        1: 1    // 丑月
-    };
+    // 前一年的节气（用于获取1月的正确小寒日期）
+    var prevYearJieQi = getJieQiDates(year - 1);
+    var xiaoHan = prevYearJieQi[11].date; // 前一年的小寒，即本年度1月的小寒
     
-    // 调整月份（立春前算上一年12月）
-    let actualMonth = month;
-    if (month < 2 || (month === 2 && day < 4)) {
-        actualMonth = month === 1 ? 12 : month;
+    var liChun = jieQi[0].date;
+    var realLiChunMonth = liChun.getMonth() + 1;
+    var realLiChunDay = liChun.getDate();
+    
+    // 确定当前日期对应的月支索引
+    // 月支顺序: 寅(2)卯(3)辰(4)巳(5)午(6)未(7)申(8)酉(9)戌(10)亥(11)子(0)丑(1)
+    // 对应节气: 立春 惊蛰 清明 立夏 芒种 小暑 立秋 白露 寒露 立冬 大雪 小寒
+    var zhiIndex;
+    var yearForMonthGan = year; // 用于月干计算的"年"
+    
+    // 先判断是否在立春之前（属于上一年）
+    if ((month < realLiChunMonth) || (month === realLiChunMonth && day < realLiChunDay)) {
+        // 在立春之前，属于上一年的丑月(1)或之前的月份
+        yearForMonthGan = year - 1;
+        
+        if ((month === 1 && day >= xiaoHan.getDate()) || 
+            (month === 2 && day < realLiChunDay)) {
+            // 1月小寒后 ~ 2月立春前 = 丑月
+            zhiIndex = 1;
+        } else if (month === 1 && day < xiaoHan.getDate()) {
+            // 1月1日 ~ 小寒前 = 子月
+            zhiIndex = 0;
+        } else {
+            zhiIndex = 1; // fallback: 丑月
+        }
+    } else {
+        // 立春之后，正常映射
+        // 节气与月支的对应（索引0-11对应立春到小寒）
+        // jieQi: 0=立春(寅2),1=惊蛰(卯3),2=清明(辰4),3=立夏(巳5),4=芒种(午6),5=小暑(未7)
+        //        6=立秋(申8),7=白露(酉9),8=寒露(戌10),9=立冬(亥11),10=大雪(子0),11=小寒(丑1)
+        var monthZhiMap = [2,3,4,5,6,7,8,9,10,11,0,1]; // 节气索引 → 地支索引
+        
+        // 找到当前日期属于哪个节气之后（遍历0-10，跳过小寒因为小寒在次年1月）
+        for (var i = 10; i >= 0; i--) {
+            var jq = jieQi[i].date;
+            var jqM = jq.getMonth() + 1;
+            var jqD = jq.getDate();
+            if (month > jqM || (month === jqM && day >= jqD)) {
+                zhiIndex = monthZhiMap[i];
+                break;
+            }
+        }
+        if (zhiIndex === undefined) zhiIndex = 2; // fallback: 寅月
     }
     
-    // 获取年干以计算月干
-    const yearPillar = getYearPillar(year, month, day);
-    
-    // 月干计算口诀：甲己之年丙作首，乙庚之岁戊为头
-    // 丙辛之岁庚寅上，丁壬壬寅顺水流
-    // 戊癸之年甲寅首
-    const monthGanStart = {
-        0: 2,  // 甲年 -> 丙寅
-        1: 4,  // 乙年 -> 戊寅
-        2: 6,  // 丙年 -> 庚寅
-        3: 8,  // 丁年 -> 壬寅
-        4: 0,  // 戊年 -> 甲寅
-        5: 2,  // 己年 -> 丙寅
-        6: 4,  // 庚年 -> 戊寅
-        7: 6,  // 辛年 -> 庚寅
-        8: 8,  // 壬年 -> 壬寅
-        9: 0   // 癸年 -> 甲寅
-    };
-    
-    const startGan = monthGanStart[yearPillar.ganIndex];
-    const zhiIndex = monthZhiMap[actualMonth];
+    // 月干计算口诀：年干确定月干起始
+    // 直接用数学公式：对于年份Y（立春后），年干索引 = (Y-4) % 10
+    // 如果是立春前的日期，用 yearForMonthGan（已减1）计算
+    var yearGanIndexForMonth = ((yearForMonthGan - 4) % 10 + 10) % 10;
+    var monthGanStart = {0:2,1:4,2:6,3:8,4:0,5:2,6:4,7:6,8:8,9:0};
+    var startGan = monthGanStart[yearGanIndexForMonth];
     // 月干 = 年干首月天干 + (本月地支索引 - 寅月索引2)
-    const ganIndex = (startGan + (zhiIndex - 2 + 12) % 12) % 10;
+    var ganIndex = ((startGan + (zhiIndex - 2 + 12) % 12) % 10 + 10) % 10;
     
     return {
         gan: TIAN_GAN[ganIndex],
@@ -256,25 +265,22 @@ function getMonthPillar(year, month, day, hour) {
  * 使用公式法计算
  */
 function getDayPillar(year, month, day) {
-    // 日干支计算公式
-    // 以1900年1月1日为甲戌日（干支索引：0, 10）
-    // 实际上1900年1月1日是甲戌日
-    
-    const baseDate = new Date(1900, 0, 1);
-    const targetDate = new Date(year, month - 1, day);
-    
-    // 计算天数差
-    const diffDays = Math.floor((targetDate - baseDate) / (1000 * 60 * 60 * 24));
-    
-    // 1900年1月1日是甲戌日（干=0, 支=10）
-    const ganIndex = (diffDays + 0) % 10;
-    const zhiIndex = (diffDays + 10) % 12;
-    
+    // 日干支计算
+    // 改用 Date.UTC 避免本地时区/夏令时导致的差 1 天 bug
+    // 参考点：1900-01-31 = 甲辰日（广泛使用的基准）
+    var ref = Date.UTC(1900, 0, 31, 12, 0, 0); // 1900-01-31 noon UTC
+    var target = Date.UTC(year, month - 1, day, 12, 0, 0);
+    var diffDays = Math.round((target - ref) / 86400000);
+
+    // 1900-01-31 = 甲辰 = gan 0, zhi 4
+    var ganIndex = ((diffDays % 10) + 10) % 10;
+    var zhiIndex = (((diffDays + 4) % 12) + 12) % 12;
+
     return {
-        gan: TIAN_GAN[(ganIndex + 10) % 10],
-        zhi: DI_ZHI[(zhiIndex + 12) % 12],
-        ganIndex: (ganIndex + 10) % 10,
-        zhiIndex: (zhiIndex + 12) % 12
+        gan: TIAN_GAN[ganIndex],
+        zhi: DI_ZHI[zhiIndex],
+        ganIndex: ganIndex,
+        zhiIndex: zhiIndex
     };
 }
 
