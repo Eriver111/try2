@@ -2652,6 +2652,89 @@ function analyzeStudy(bazi) {
     };
 }
 
+// ==================== 真太阳时（省份经度校正） ====================
+// 中国各省/地区近似经度（省会城市经度，精确到度）
+var PROVINCE_LNG = {
+    '北京':116,'天津':117,'上海':121,'重庆':106,
+    '河北':114,'山西':112,'内蒙古':111,
+    '辽宁':123,'吉林':125,'黑龙江':126,
+    '江苏':118,'浙江':120,'安徽':117,'福建':119,'江西':115,'山东':117,
+    '河南':113,'湖北':114,'湖南':112,'广东':113,'广西':108,'海南':110,
+    '四川':104,'贵州':106,'云南':102,'西藏':91,
+    '陕西':108,'甘肃':103,'青海':101,'宁夏':106,'新疆':87,
+    '香港':114,'澳门':113,'台湾':121
+};
+
+// 北京时区的标准经度
+var BEIJING_LNG = 120;
+
+/**
+ * 根据出生地省份计算真太阳时调整后的时辰索引
+ * @param {number} hour - 原始时辰索引 (0=子时, 1=丑时, ...)
+ * @param {string} province - 省份名称
+ * @param {number} year, month, day - 出生日期（用于均时差）
+ * @returns {object} { hourIndex, solarMinutes, lng, lngOffsetMin, eotMin, method }
+ */
+function getTrueSolarHour(hour, province, year, month, day) {
+    var lng = PROVINCE_LNG[province] || BEIJING_LNG;
+
+    // 1. 经度差：每差1度 = 4分钟
+    var lngOffsetMin = (lng - BEIJING_LNG) * 4;
+
+    // 2. 均时差（Equation of Time）
+    var monthDays = [0,31,59,90,120,151,181,212,243,273,304,334];
+    var dayOfYear = monthDays[Math.max(0, month - 1)] + day;
+    var B = (dayOfYear - 1) * (360 / 365) * (Math.PI / 180);
+    var eotMin = 229.18 * (
+        0.000075 +
+        0.001868 * Math.cos(B) -
+        0.032077 * Math.sin(B) -
+        0.014615 * Math.cos(2 * B) -
+        0.040849 * Math.sin(2 * B)
+    );
+
+    // 3. 总偏移量（分钟）
+    var totalOffsetMin = lngOffsetMin + eotMin;
+
+    // 4. 时辰整点 → 真太阳时
+    var hourMap = [0,2,4,6,8,10,12,14,16,18,20,22];
+    var clockHour = hourMap[hour] !== undefined ? hourMap[hour] : hour;
+    var trueMinutes = clockHour * 60 + totalOffsetMin;
+    trueMinutes = ((trueMinutes % 1440) + 1440) % 1440;
+
+    // 5. 真太阳时 → 时辰索引
+    var trueHour = Math.floor(trueMinutes / 60);
+    var trueMin = Math.round(trueMinutes % 60);
+    if (trueMin >= 60) { trueHour++; trueMin = 0; }
+    if (trueHour >= 24) trueHour -= 24;
+
+    var hourIndex;
+    if (trueHour >= 23 || trueHour < 1) hourIndex = 0;       // 子时 23:00-01:00
+    else if (trueHour >= 1 && trueHour < 3) hourIndex = 1;    // 丑时
+    else if (trueHour >= 3 && trueHour < 5) hourIndex = 2;    // 寅时
+    else if (trueHour >= 5 && trueHour < 7) hourIndex = 3;    // 卯时
+    else if (trueHour >= 7 && trueHour < 9) hourIndex = 4;    // 辰时
+    else if (trueHour >= 9 && trueHour < 11) hourIndex = 5;   // 巳时
+    else if (trueHour >= 11 && trueHour < 13) hourIndex = 6;  // 午时
+    else if (trueHour >= 13 && trueHour < 15) hourIndex = 7;  // 未时
+    else if (trueHour >= 15 && trueHour < 17) hourIndex = 8;  // 申时
+    else if (trueHour >= 17 && trueHour < 19) hourIndex = 9;  // 酉时
+    else if (trueHour >= 19 && trueHour < 21) hourIndex = 10; // 戌时
+    else hourIndex = 11;                                       // 亥时
+
+    var method = totalOffsetMin >= 0 ? '+' : '';
+    method += Math.round(totalOffsetMin);
+
+    return {
+        hourIndex: hourIndex,           // 真太阳时时辰索引
+        solarMinutes: trueMinutes,      // 真太阳时分钟数
+        lng: lng,
+        lngOffsetMin: Math.round(lngOffsetMin),
+        eotMin: Math.round(eotMin),
+        method: method
+    };
+}
+
 window.BaZiCalculator = {
     calculate: calculateBaZi,
     calculateDaYun: calculateDaYun,
@@ -2673,5 +2756,7 @@ window.BaZiCalculator = {
     analyzeWealth: analyzeWealth,
     analyzeFortune: analyzeFortune,
     analyzeThisYear: analyzeThisYear,
-    analyzeStudy: analyzeStudy
+    analyzeStudy: analyzeStudy,
+    getTrueSolarHour: getTrueSolarHour,
+    PROVINCE_LNG: PROVINCE_LNG
 };

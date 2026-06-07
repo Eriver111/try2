@@ -25,7 +25,8 @@ function getUrlParams() {
         month: parseInt(p.get('month')),
         day: parseInt(p.get('day')),
         hour: parseInt(p.get('hour')),
-        gender: p.get('gender')
+        gender: p.get('gender'),
+        prov: p.get('prov') || ''
     };
 }
 
@@ -51,8 +52,16 @@ function render(data) {
     document.getElementById('genderLabel').textContent = bazi.gender === 'male' ? '乾造' : '坤造';
     document.getElementById('birthDateText').textContent =
         `${bazi.birthDate.year}年${bazi.birthDate.month}月${bazi.birthDate.day}日`;
-    document.getElementById('birthHourText').textContent =
-        `${SHI_CHEN_NAMES[bazi.birthDate.hour]}（${SHI_CHEN_TIMES[bazi.birthDate.hour]}）`;
+
+    // 时辰显示：若经真太阳时调整后不同，标注原始北京时间
+    var hourText = `${SHI_CHEN_NAMES[bazi.birthDate.hour]}（${SHI_CHEN_TIMES[bazi.birthDate.hour]}）`;
+    if (bazi.originalHour !== undefined && bazi.originalHour !== bazi.birthDate.hour) {
+        hourText += ' <span style="font-size:11px;color:var(--gold)">真太阳时</span>';
+        hourText += ' <span style="font-size:10px;color:var(--text-dim)">原北京时间：' + SHI_CHEN_NAMES[bazi.originalHour] + '</span>';
+    } else if (bazi.solarInfo && bazi.solarInfo.lng !== 120) {
+        hourText += ' <span style="font-size:10px;color:var(--text-dim)">（经度已校正）</span>';
+    }
+    document.getElementById('birthHourText').innerHTML = hourText;
     document.getElementById('nayinText').textContent = bazi.naYin;
 
     // 大运
@@ -1079,40 +1088,32 @@ function renderStudy(bazi) {
 
 // ==================== 真太阳时 ====================
 function renderSolarTime(year, month, day, birthHour) {
-    const el = document.getElementById('solarTimeText');
+    var el = document.getElementById('solarTimeText');
     if (!el) return;
 
-    // 计算日期在一年中的天数
-    const monthDays = [0,31,59,90,120,151,181,212,243,273,304,334];
-    const dayOfYear = monthDays[Math.max(0, month - 1)] + day;
+    // 优先使用已计算好的 solarInfo（含经度+均时差调整）
+    var solarInfo = (_bazi && _bazi.solarInfo) || null;
+    if (!solarInfo) {
+        solarInfo = window.BaZiCalculator.getTrueSolarHour(birthHour, _params.prov || '', year, month, day);
+    }
 
-    // 均时差 (Equation of Time) - Spencer公式（精度约3分钟）
-    const B = (dayOfYear - 1) * (360 / 365) * (Math.PI / 180);
-    const eot = 229.18 * (
-        0.000075 +
-        0.001868 * Math.cos(B) -
-        0.032077 * Math.sin(B) -
-        0.014615 * Math.cos(2 * B) -
-        0.040849 * Math.sin(2 * B)
-    ); // 单位：分钟
+    // 用 solarMinutes 直接取真太阳时间
+    var tm = solarInfo.solarMinutes;
+    var sH = Math.floor(tm / 60);
+    var sM = Math.round(tm % 60);
+    if (sM >= 60) { sH++; sM = 0; }
+    if (sH >= 24) sH -= 24;
+    var solarStr = String(sH).padStart(2,'0') + ':' + String(sM).padStart(2,'0');
 
-    // 经度修正：默认按东八区标准120°E（北京）
-    const lng = 120; // 默认北京经度
-    const lngOffset = (lng - 120) * 4;
+    var sign = Math.abs(solarInfo.eotMin) < 0.5 ? '≈' : (solarInfo.eotMin > 0 ? '+' : '');
+    el.innerHTML = solarStr + ' <span style="font-size:11px;color:var(--text-dim)">（均时差' + sign + Math.abs(solarInfo.eotMin) + '分'
 
-    // 北京时间 → 平太阳时 → 真太阳时
-    const bjMinutes = birthHour * 60; // 简化：以时辰中点为例，子时=0点，丑时=2点
-    // 使用时辰对应的整点
-    const hourMap = [0,2,4,6,8,10,12,14,16,18,20,22];
-    const clockHour = hourMap[birthHour] || birthHour;
-    const totalMinutes = clockHour * 60 + eot + lngOffset;
-
-    const solarHour = Math.floor(((totalMinutes % 1440) + 1440) % 1440 / 60);
-    const solarMin = Math.round(((totalMinutes % 1440) + 1440) % 1440 % 60);
-    const solarStr = String(solarHour).padStart(2,'0') + ':' + String(solarMin).padStart(2,'0');
-
-    const sign = Math.abs(eot) < 0.5 ? '≈' : (eot > 0 ? '+' : '');
-    el.innerHTML = `${solarStr} <span style="font-size:11px;color:var(--text-dim)">（均时差${sign}${eot.toFixed(0)}分）</span>`;
+    // 省份经度信息
+    if (_params.prov && solarInfo.lng !== 120) {
+        var offsetSign = solarInfo.lngOffsetMin > 0 ? '东' : '西';
+        el.innerHTML += ' • ' + _params.prov + '经度' + solarInfo.lng + '°（北京偏' + offsetSign + Math.abs(solarInfo.lngOffsetMin) + '分）';
+    }
+    el.innerHTML += '）</span>';
 }
 
 // ==================== 抽屉式开关 ====================
@@ -1132,9 +1133,22 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
+    // --- 真太阳时纠正（根据出生地省份经度调整时辰）---
+    var originalHour = _params.hour;
+    var solarInfo = null;
+    if (_params.prov) {
+        solarInfo = window.BaZiCalculator.getTrueSolarHour(
+            _params.hour, _params.prov, _params.year, _params.month, _params.day
+        );
+        _params.hour = solarInfo.hourIndex;
+    }
+
     const bazi = window.BaZiCalculator.calculate(
         _params.year, _params.month, _params.day, _params.hour, _params.gender
     );
+    // 保存原始时辰供显示
+    bazi.originalHour = originalHour;
+    bazi.solarInfo = solarInfo;
 
     const daYun = window.BaZiCalculator.calculateDaYun(
         bazi.month, bazi.year, _params.gender,
