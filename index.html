@@ -7,7 +7,8 @@
     <meta name="description" content="免费在线八字排盘，输入公历（阳历）生日即可获取完整命盘。大运、流年、婚姻、财运、事业、学业详解。AI辅助解读，准确易懂，秒出结果。">
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;600;700;900&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
-<script defer src="https://cloud.umami.is/script.js" data-website-id="01428b1c-708d-4dce-bc78-beda633ab896"></script>
+    <!-- Umami 统计：去 umami.is 免费注册，获取 Website ID 替换下方的 YOUR_UMAMI_ID -->
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="YOUR_UMAMI_ID"></script>
 </head>
 <body>
     <!-- 背景层 -->
@@ -132,11 +133,11 @@
                     <h2>输入生辰 · 排盘推演</h2>
                     <p class="form-hint">请准确填写出生年月日时，以获取精准命盘</p>
                     <p class="form-example">📅 请使用<strong>公历（阳历）</strong>日期，如：<em>2004年8月14日</em>（非农历七月初一）</p>
-               <div class="trust-signals">
-    <span>🔒 数据全程加密</span>
-    <span>☁️ 不留存个人信息</span>
-    <span>⚡ 秒出排盘结果</span>
-</div>
+                    <div class="trust-signals">
+                        <span>🔒 数据全程加密</span>
+                        <span>☁️ 不留存个人信息</span>
+                        <span>⚡ 秒出排盘结果</span>
+                    </div>
                 </div>
 
                 <form id="birthForm" class="birth-form">
@@ -163,46 +164,51 @@
                         </div>
                         <div class="form-group">
                             <label for="birthHour">时柱</label>
-                            <select id="birthHour" name="hour" required>
+                            <select id="birthHour" class="hour-select" name="hour" required>
                                 <option value="">-- 选择时辰 --</option>
                                 <optgroup label="子时 23:00-01:00">
-                                    <option value="0">23点 · 晚子时</option>
-                                    <option value="0"> 0点 · 早子时</option>
+                                    <option value="0" data-clock="23">23点 · 晚子时</option>
+                                    <option value="0" data-clock="0"> 0点 · 早子时</option>
                                 </optgroup>
                                 <optgroup label="丑时 01:00-03:00">
-                                    <option value="1"> 1点</option><option value="1"> 2点</option>
+                                    <option value="1" data-clock="1"> 1点</option><option value="1" data-clock="2"> 2点</option>
                                 </optgroup>
                                 <optgroup label="寅时 03:00-05:00">
-                                    <option value="2"> 3点</option><option value="2"> 4点</option>
+                                    <option value="2" data-clock="3"> 3点</option><option value="2" data-clock="4"> 4点</option>
                                 </optgroup>
                                 <optgroup label="卯时 05:00-07:00">
-                                    <option value="3"> 5点</option><option value="3"> 6点</option>
+                                    <option value="3" data-clock="5"> 5点</option><option value="3" data-clock="6"> 6点</option>
                                 </optgroup>
                                 <optgroup label="辰时 07:00-09:00">
-                                    <option value="4"> 7点</option><option value="4"> 8点</option>
+                                    <option value="4" data-clock="7"> 7点</option><option value="4" data-clock="8"> 8点</option>
                                 </optgroup>
                                 <optgroup label="巳时 09:00-11:00">
-                                    <option value="5"> 9点</option><option value="5">10点</option>
+                                    <option value="5" data-clock="9"> 9点</option><option value="5" data-clock="10">10点</option>
                                 </optgroup>
                                 <optgroup label="午时 11:00-13:00">
-                                    <option value="6">11点</option><option value="6">12点</option>
+                                    <option value="6" data-clock="11">11点</option><option value="6" data-clock="12">12点</option>
                                 </optgroup>
                                 <optgroup label="未时 13:00-15:00">
-                                    <option value="7">13点</option><option value="7">14点</option>
+                                    <option value="7" data-clock="13">13点</option><option value="7" data-clock="14">14点</option>
                                 </optgroup>
                                 <optgroup label="申时 15:00-17:00">
-                                    <option value="8">15点</option><option value="8">16点</option>
+                                    <option value="8" data-clock="15">15点</option><option value="8" data-clock="16">16点</option>
                                 </optgroup>
                                 <optgroup label="酉时 17:00-19:00">
-                                    <option value="9">17点</option><option value="9">18点</option>
+                                    <option value="9" data-clock="17">17点</option><option value="9" data-clock="18">18点</option>
                                 </optgroup>
                                 <optgroup label="戌时 19:00-21:00">
-                                    <option value="10">19点</option><option value="10">20点</option>
+                                    <option value="10" data-clock="19">19点</option><option value="10" data-clock="20">20点</option>
                                 </optgroup>
                                 <optgroup label="亥时 21:00-23:00">
-                                    <option value="11">21点</option><option value="11">22点</option>
+                                    <option value="11" data-clock="21">21点</option><option value="11" data-clock="22">22点</option>
                                 </optgroup>
                             </select>
+                        </div>
+                        <div class="form-group form-group-minute">
+                            <label for="birthMinute">精确分钟</label>
+                            <input type="number" id="birthMinute" name="minute" min="0" max="59" placeholder="如: 30" class="minute-input">
+                            <span class="minute-hint">用于真太阳时校正，可不填</span>
                         </div>
                     </div>
                     <div class="form-row form-row-single">
