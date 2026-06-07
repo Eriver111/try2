@@ -66,6 +66,13 @@ document.getElementById('birthForm').addEventListener('submit', function(e) {
     btn.innerHTML = '<span class="btn-text">正在排盘...</span>';
 
     const params = new URLSearchParams({ year, month, day, hour, gender });
+    const hourSelect = document.getElementById('birthHour');
+    if (hourSelect.selectedOptions && hourSelect.selectedOptions[0]) {
+        var clock = hourSelect.selectedOptions[0].getAttribute('data-clock');
+        if (clock) params.set('clock', clock);
+    }
+    const minute = document.getElementById('birthMinute').value;
+    if (minute !== '' && !isNaN(parseInt(minute))) params.set('minute', minute);
     const prov = document.getElementById('birthProvince').value;
     const city = document.getElementById('birthCity').value;
     const dist = document.getElementById('birthDistrict').value;

@@ -26,7 +26,9 @@ function getUrlParams() {
         day: parseInt(p.get('day')),
         hour: parseInt(p.get('hour')),
         gender: p.get('gender'),
-        prov: p.get('prov') || ''
+        prov: p.get('prov') || '',
+        minute: parseInt(p.get('minute')) || 0,
+        clock: parseInt(p.get('clock')) || 0
     };
 }
 
@@ -1138,7 +1140,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var solarInfo = null;
     if (_params.prov) {
         solarInfo = window.BaZiCalculator.getTrueSolarHour(
-            _params.hour, _params.prov, _params.year, _params.month, _params.day
+            _params.hour, _params.prov, _params.year, _params.month, _params.day, _params.minute, _params.clock
         );
         _params.hour = solarInfo.hourIndex;
     }
@@ -1152,7 +1154,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const daYun = window.BaZiCalculator.calculateDaYun(
         bazi.month, bazi.year, _params.gender,
-        _params.year, _params.month, _params.day, _params.hour
+        _params.year, _params.month, _params.day, _params.hour, _params.clock || 0
     );
 
     const shenSha = window.BaZiCalculator.calculateShenSha(bazi);

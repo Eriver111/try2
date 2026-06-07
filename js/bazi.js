@@ -551,15 +551,20 @@ function countWuXing(yearPillar, monthPillar, dayPillar, hourPillar) {
  * @param {number} birthDay    - 出生公历日
  * @returns {Object} { list, isForward, startAge }
  */
-function calculateDaYun(monthPillar, yearPillar, gender, birthYear, birthMonth, birthDay, birthHour) {
+function calculateDaYun(monthPillar, yearPillar, gender, birthYear, birthMonth, birthDay, birthHour, preciseClock) {
     const yearGanIsYang = yearPillar.ganIndex % 2 === 0;
     const isMale = gender === 'male';
     const isForward = (yearGanIsYang && isMale) || (!yearGanIsYang && !isMale);
 
-    // 出生日期时间：时辰索引（0-11）→ 真实钟点（0-23）
-    const hourMap = [0,2,4,6,8,10,12,14,16,18,20,22];
-    const birthClockHour = (typeof birthHour === 'number') ? (hourMap[birthHour] || 0) : 0;
-    const birthDateTime = birthDateToDecimal(birthYear, birthMonth, birthDay, birthClockHour);
+    // 出生日期时间：优先使用 preciseClock（精确钟点），否则用时辰中点
+    var hourMap = [0,2,4,6,8,10,12,14,16,18,20,22];
+    var birthClockHour;
+    if (typeof preciseClock === 'number' && preciseClock > 0) {
+        birthClockHour = preciseClock;
+    } else {
+        birthClockHour = hourMap[birthHour] !== undefined ? hourMap[birthHour] : 0;
+    }
+    var birthDateTime = birthDateToDecimal(birthYear, birthMonth, birthDay, birthClockHour);
 
     let targetJQ = null, diffDays = 0;
 
@@ -2677,7 +2682,7 @@ var BEIJING_LNG = 120;
  * @param {number} year, month, day - 出生日期（用于均时差）
  * @returns {object} { hourIndex, solarMinutes, lng, lngOffsetMin, eotMin, method }
  */
-function getTrueSolarHour(hour, province, year, month, day) {
+function getTrueSolarHour(hour, province, year, month, day, minute, clock) {
     var lng = PROVINCE_LNG[province] || BEIJING_LNG;
 
     // 1. 经度差：每差1度 = 4分钟
@@ -2698,10 +2703,24 @@ function getTrueSolarHour(hour, province, year, month, day) {
     // 3. 总偏移量（分钟）
     var totalOffsetMin = lngOffsetMin + eotMin;
 
-    // 4. 时辰整点 → 真太阳时
-    var hourMap = [0,2,4,6,8,10,12,14,16,18,20,22];
-    var clockHour = hourMap[hour] !== undefined ? hourMap[hour] : hour;
-    var trueMinutes = clockHour * 60 + totalOffsetMin;
+    // 4. 精确时间 → 真太阳时
+    // 如果有 clock 参数（data-clock），使用精确钟点；否则用时辰中点
+    var clockHour, clockMinute;
+    if (clock > 0) {
+        clockHour = clock;
+        clockMinute = minute || 0;
+    } else if (minute > 0) {
+        // 只有分钟没有钟点，仍用中点
+        var hourMap = [0,2,4,6,8,10,12,14,16,18,20,22];
+        clockHour = hourMap[hour] !== undefined ? hourMap[hour] : hour;
+        clockMinute = minute;
+    } else {
+        var hourMap = [0,2,4,6,8,10,12,14,16,18,20,22];
+        clockHour = hourMap[hour] !== undefined ? hourMap[hour] : hour;
+        clockMinute = 0;
+    }
+
+    var trueMinutes = clockHour * 60 + clockMinute + totalOffsetMin;
     trueMinutes = ((trueMinutes % 1440) + 1440) % 1440;
 
     // 5. 真太阳时 → 时辰索引
