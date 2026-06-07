@@ -595,7 +595,7 @@ function calculateDaYun(monthPillar, yearPillar, gender, birthYear, birthMonth, 
         for (const yr of [birthYear, birthYear + 1]) {
             const jqList = getJieQiDates(yr);
             for (const jq of jqList) {
-                const jqDT = birthDateToDecimal(jq.date.getFullYear(), jq.date.getMonth() + 1, jq.date.getDate(), 0);
+                const jqDT = birthDateToDecimal(jq.date.getFullYear(), jq.date.getMonth() + 1, jq.date.getDate(), jq.date.getHours());
                 if (jqDT > birthDateTime) { targetJQ = jq; diffDays = jqDT - birthDateTime; break; }
             }
             if (targetJQ) break;
@@ -606,7 +606,7 @@ function calculateDaYun(monthPillar, yearPillar, gender, birthYear, birthMonth, 
         for (const yr of [birthYear, birthYear - 1]) {
             const jqList = getJieQiDates(yr);
             for (let i = jqList.length - 1; i >= 0; i--) {
-                const jqDT = birthDateToDecimal(jqList[i].date.getFullYear(), jqList[i].date.getMonth() + 1, jqList[i].date.getDate(), 0);
+                const jqDT = birthDateToDecimal(jqList[i].date.getFullYear(), jqList[i].date.getMonth() + 1, jqList[i].date.getDate(), jqList[i].date.getHours());
                 if (jqDT < birthDateTime) {
                     targetJQ = jqList[i];
                     diffDays = birthDateTime - jqDT;
