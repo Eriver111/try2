@@ -273,15 +273,22 @@ body {
     color: var(--text-dim);
     letter-spacing: 1px;
 }
+
 .form-example {
-    font-size: 12px; color: var(--gold); opacity: 0.8;
-    letter-spacing: 1px; margin-top: 6px; padding: 8px 14px;
+    font-size: 12px;
+    color: var(--gold);
+    opacity: 0.8;
+    letter-spacing: 1px;
+    margin-top: 6px;
+    padding: 8px 14px;
     background: rgba(212,175,55,0.06);
     border: 1px solid rgba(212,175,55,0.12);
-    border-radius: 2px; display: inline-block;
+    border-radius: 2px;
+    display: inline-block;
 }
 .form-example strong { font-weight: 700; }
 .form-example em { font-style: normal; color: var(--text-primary); }
+
 .trust-signals {
     display: flex; gap: 16px; justify-content: center;
     margin-top: 10px; flex-wrap: wrap;
@@ -363,6 +370,37 @@ body {
     cursor: not-allowed;
     background: rgba(10,10,20,0.6);
     border-color: rgba(212,175,55,0.08);
+}
+
+.form-group-minute {
+    flex: 0 0 140px;
+    min-width: 120px;
+}
+.minute-input {
+    width: 100%;
+    height: 46px;
+    background: rgba(212,175,55,0.04);
+    border: 1px solid rgba(212,175,55,0.15);
+    border-radius: 2px;
+    color: var(--text-primary);
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    text-align: center;
+    padding: 0 8px;
+    letter-spacing: 2px;
+    -moz-appearance: textfield;
+}
+.minute-input::-webkit-inner-spin-button,
+.minute-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.minute-input:focus { outline: none; border-color: rgba(212,175,55,0.4); box-shadow: 0 0 10px var(--gold-glow); }
+.minute-input::placeholder { color: var(--text-dim); opacity: 0.4; }
+.minute-hint {
+    display: block;
+    font-size: 10px;
+    color: var(--text-dim);
+    opacity: 0.5;
+    margin-top: 2px;
+    text-align: center;
 }
 
 .form-group select option {
