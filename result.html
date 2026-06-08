@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>八字命盘解读 - 免费在线排盘结果 | knowbazi.online</title>
+    <title>知时 - 传统文化分析报告 | knowbazi.online</title>
     <meta name="robots" content="noindex">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/result.css">
@@ -19,8 +19,8 @@
     <div class="result-container">
         <!-- 顶部信息栏 -->
         <header class="result-header">
-            <a href="index.html" class="back-link">← 重新排盘</a>
-            <h1 class="result-title">八字命盘</h1>
+            <a href="index.html" class="back-link">← 重新分析</a>
+            <h1 class="result-title">知时</h1>
             <div class="birth-info">
                 <span id="genderLabel"></span>
                 <span class="info-sep">|</span>
@@ -33,7 +33,7 @@
                 <span class="info-sep">|</span>
                 真太阳时：<span id="solarTimeText"></span>
             </div>
-            <button class="share-btn" onclick="shareResult()" title="复制分享链接">🔗 分享命盘</button>
+            <button class="share-btn" onclick="shareResult()" title="复制分享链接">🔗 分享报告</button>
         </header>
 
         <!-- ==================== 大运流年区域 ==================== -->
@@ -62,13 +62,13 @@
             </div>
         </section>
 
-        <!-- ==================== 四柱八字主排盘 ==================== -->
+        <!-- ==================== 四柱主盘 ==================== -->
         <section class="section-sizhu">
             <div class="section-header">
-                <h2>四柱八字</h2>
+                <h2>四柱盘面</h2>
             </div>
             
-            <!-- 专业排盘表格 -->
+            <!-- 专业盘面表格 -->
             <div class="paipan-table">
                 <!-- 表头：流年/大运/四柱名称 -->
                 <div class="pp-row pp-header">
@@ -261,7 +261,7 @@
 
         <!-- 底部声明 -->
         <footer class="result-footer">
-            <p>※ 本排盘结果仅供学习参考与娱乐交流，不构成任何决策建议</p>
+            <p>※ 本分析报告仅供学习参考与娱乐交流，不构成任何决策建议</p>
             <p class="contact-info">📱 有任何问题，请联系客服微信 vx：EriverLife</p>
         </footer>
     </div>
@@ -277,14 +277,14 @@
         if (navigator.clipboard) {
             navigator.clipboard.writeText(url).then(function() {
                 btn.textContent = '✓ 已复制链接'; btn.classList.add('copied');
-                setTimeout(function() { btn.textContent = '🔗 分享命盘'; btn.classList.remove('copied'); }, 2000);
+                setTimeout(function() { btn.textContent = '🔗 分享报告'; btn.classList.remove('copied'); }, 2000);
             });
         } else {
             var ta = document.createElement('textarea'); ta.value = url;
             document.body.appendChild(ta); ta.select();
             document.execCommand('copy'); document.body.removeChild(ta);
             btn.textContent = '✓ 已复制链接'; btn.classList.add('copied');
-            setTimeout(function() { btn.textContent = '🔗 分享命盘'; btn.classList.remove('copied'); }, 2000);
+            setTimeout(function() { btn.textContent = '🔗 分享报告'; btn.classList.remove('copied'); }, 2000);
         }
     }
     </script>
