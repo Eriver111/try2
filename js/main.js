@@ -63,7 +63,7 @@ document.getElementById('birthForm').addEventListener('submit', function(e) {
 
     const btn = document.querySelector('.submit-btn');
     btn.classList.add('loading');
-    btn.innerHTML = '<span class="btn-text">正在排盘...</span>';
+    btn.innerHTML = '<span class="btn-text">正在分析...</span>';
 
     const params = new URLSearchParams({ year, month, day, hour, gender });
     const hourSelect = document.getElementById('birthHour');

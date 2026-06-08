@@ -83,7 +83,7 @@ function render(data) {
 
     renderLiuNian(currentDaYun, dayGan, currentYear);
 
-    // 四柱排盘（固定四柱）
+    // 四柱主盘（固定四柱）
     renderSiZhu(bazi, dayGan);
 
     // 更新表格中的大运/流年列
@@ -260,7 +260,7 @@ function selectLiuNian(liuNianIndex) {
     updateLiuNianColumn(daYunItem, liuNianIndex);
 }
 
-// ==================== 四柱排盘渲染（固定四柱部分） ====================
+// ==================== 四柱主盘渲染 ====================
 function renderSiZhu(bazi, dayGan) {
     const positions = ['year', 'month', 'day', 'hour'];
 
@@ -581,7 +581,7 @@ function renderWuXing(wuXingCount) {
     const strongest = sorted[0];
     const missing = sorted.filter(([_, c]) => c === 0);
 
-    let text = `八字五行中【${strongest[0]}】最旺（${strongest[1]}个）`;
+    let text = `四柱五行中【${strongest[0]}】最旺（${strongest[1]}个）`;
     if (missing.length > 0) {
         text += `，【${missing.map(([n]) => n).join('、')}】缺失`;
     } else {

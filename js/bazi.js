@@ -1,5 +1,5 @@
 ﻿/**
- * 八字排盘核心计算逻辑
+ * 知时 — 四柱推算核心逻辑
  * 实现四柱（年柱、月柱、日柱、时柱）的推算
  */
 
@@ -715,7 +715,7 @@ function calculateLiuNian(daYunItem, dayGan) {
  */
 
 // 神煞定义：名称、类型（吉神/凶煞/中性）、查找规则、描述
-// 神煞定义：问真八字风格 — 精简实用，每柱独立查找
+// 神煞定义 — 精简实用，每柱独立查找
 // 名称、类型（吉神/凶煞/中性）、查找规则、描述
 const SHEN_SHA_DEFS = [
     // ====== 吉神（日干/月支/日支查） ======
@@ -2190,7 +2190,7 @@ function analyzeWealth(bazi, gender) {
     // --- 大白话财运总结 ---
     const summaryParts = [];
     if (caiCount >= 2) {
-        summaryParts.push('你八字里财星出现了' + caiCount + '次');
+        summaryParts.push('你命局中财星出现了' + caiCount + '次');
     } else if (caiCount === 1) {
         summaryParts.push('你命里有财星在' + (caiPositions[0] ? caiPositions[0].slice(0, 2) : '命') + '位');
     } else {
