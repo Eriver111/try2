@@ -264,7 +264,21 @@
         <footer class="result-footer">
             <p>※ 本分析报告仅供学习参考与娱乐交流，不构成任何决策建议</p>
             <p class="contact-info">📱 有任何问题，请联系客服微信 vx：EriverLife</p>
+            <p class="feedback-link" onclick="showFeedback()">💬 帮助我们做得更好</p>
         </footer>
+    </div>
+
+    <!-- 反馈弹窗 -->
+    <div class="feedback-overlay" id="feedbackOverlay" onclick="closeFeedback(event)">
+        <div class="feedback-dialog" onclick="event.stopPropagation()">
+            <div class="feedback-close" onclick="closeFeedback()">✕</div>
+            <div class="feedback-title">你的声音，我们很在意</div>
+            <div class="feedback-sub">无论建议还是吐槽，都欢迎告诉我们</div>
+            <textarea id="feedbackMsg" class="feedback-textarea" placeholder="写下你的想法……（比如：希望增加什么功能、哪里用得不够顺手）" maxlength="500"></textarea>
+            <input id="feedbackContact" class="feedback-input" placeholder="联系方式（微信号/手机号，优秀反馈将获得免费体验券）" maxlength="100" />
+            <button class="feedback-submit" onclick="submitFeedback()">提交反馈</button>
+            <div class="feedback-result" id="feedbackResult"></div>
+        </div>
     </div>
 
     <script src="js/bazi.js"></script>
