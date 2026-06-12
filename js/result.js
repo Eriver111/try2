@@ -1143,6 +1143,10 @@ document.addEventListener('DOMContentLoaded', function() {
             _params.hour, _params.prov, _params.year, _params.month, _params.day, _params.minute, _params.clock
         );
         _params.hour = solarInfo.hourIndex;
+        // 也更新 clock 为真太阳时钟点，确保年柱/月柱的节气比较使用真太阳时
+        if (solarInfo.trueHour !== undefined) {
+            _params.clock = solarInfo.trueHour + (solarInfo.trueMinute || 0) / 60;
+        }
     }
 
     const bazi = window.BaZiCalculator.calculate(

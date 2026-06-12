@@ -48,14 +48,14 @@ const NA_YIN = [
     '大溪水', '大溪水', '沙中土', '沙中土', '天上火', '天上火', '石榴木', '石榴木', '大海水', '大海水'
 ];
 
-// 立春近似时刻（北京时间小时数，精确到±30分钟，用于年柱/月柱的精确切换）
+// 立春近似时刻（北京时间，小数部分=分钟/60，用于年柱/月柱的精确切换）
 // 数据来源：天文年历近似值
 var LICHUN_HOUR = {
-    1980:19,1981:5,1982:11,1983:17,1984:23,1985:5,1986:11,1987:17,1988:23,1989:4,
-    1990:10,1991:16,1992:22,1993:3,1994:9,1995:15,1996:21,1997:3,1998:8,1999:14,
-    2000:20,2001:2,2002:8,2003:14,2004:19,2005:1,2006:7,2007:13,2008:19,2009:0,
-    2010:6,2011:12,2012:18,2013:0,2014:6,2015:11,2016:17,2017:23,2018:5,2019:11,
-    2020:17,2021:23,2022:4,2023:10,2024:16,2025:22,2026:4,2027:10,2028:16,2029:21,2030:3
+    1980:19.75,1981:5.75,1982:11.5,1983:17.25,1984:23.5,1985:5.25,1986:11,1987:17,1988:23,1989:4.5,
+    1990:10.25,1991:16,1992:22,1993:3.5,1994:9.25,1995:15,1996:21,1997:3.5,1998:8.5,1999:14.5,
+    2000:20.5,2001:2.25,2002:8,2003:14,2004:19.93,2005:1.25,2006:7,2007:13,2008:19,2009:0.5,
+    2010:6.25,2011:12,2012:18,2013:0.25,2014:6,2015:11.75,2016:17.5,2017:23.25,2018:5,2019:11.25,
+    2020:17,2021:23,2022:4.5,2023:10.5,2024:16.25,2025:22,2026:4,2027:10,2028:16,2029:21,2030:3
 };
 
 // 小寒近似时刻（北京时间小时数）— 子/丑月分界
@@ -155,10 +155,12 @@ function getJieQiDates(year) {
             var d = days[i];
             var targetYear = (m === 1) ? year + 1 : year;
             // 立春和小寒返回带钟点（用于精确到时的月柱切换）
-            // 都使用搜索年份 year 作为键值（和 LICHUN_HOUR/XIAOHAN_HOUR 表一致）
-            var h = (i === 0) ? (LICHUN_HOUR[year] || 12) :
-                    (i === 11) ? (XIAOHAN_HOUR[year] || 16) : 0;
-            return { name: bq.name, date: new Date(targetYear, m - 1, d, h, 0, 0) };
+            // 立春支持小数（19.5=19:30），小寒整数小时
+            var hVal = (i === 0) ? (LICHUN_HOUR[year] || 12) :
+                       (i === 11) ? (XIAOHAN_HOUR[year] || 16) : 0;
+            var hHour = Math.floor(hVal);
+            var hMin = Math.round((hVal - hHour) * 60);
+            return { name: bq.name, date: new Date(targetYear, m - 1, d, hHour, hMin, 0) };
         });
     }
 
@@ -189,7 +191,7 @@ function getYearPillar(year, month, day, hour) {
     var liChun = jq[0].date;
     var liChunMonth = liChun.getMonth() + 1;
     var liChunDay = liChun.getDate();
-    var liChunHour = liChun.getHours();
+    var liChunHour = liChun.getHours() + liChun.getMinutes() / 60;
 
     // 如果在立春时刻之前，年柱属于上一年
     var actualYear = year;
@@ -230,7 +232,7 @@ function getMonthPillar(year, month, day, hour, clock) {
     var liChun = jieQi[0].date;
     var realLiChunMonth = liChun.getMonth() + 1;
     var realLiChunDay = liChun.getDate();
-    var realLiChunHour = liChun.getHours();
+    var liChunHour = liChun.getHours() + liChun.getMinutes() / 60;
     
     // 确定当前日期对应的月支索引
     // 月支顺序: 寅(2)卯(3)辰(4)巳(5)午(6)未(7)申(8)酉(9)戌(10)亥(11)子(0)丑(1)
@@ -241,7 +243,7 @@ function getMonthPillar(year, month, day, hour, clock) {
     // 先判断是否在立春时刻之前（属于上一年）
     if ((month < realLiChunMonth) || 
         (month === realLiChunMonth && day < realLiChunDay) ||
-        (month === realLiChunMonth && day === realLiChunDay && (clock || 0) < realLiChunHour)) {
+        (month === realLiChunMonth && day === realLiChunDay && (clock || 0) < liChunHour)) {
         // 在立春之前，属于上一年的丑月(1)或之前的月份
         yearForMonthGan = year - 1;
         
@@ -449,7 +451,15 @@ function calculateBaZi(year, month, day, hour, gender, clock) {
     // 计算四柱
     const yearPillar = getYearPillar(year, month, day, clock || 0);
     const monthPillar = getMonthPillar(year, month, day, hour, clock || 0);
-    const dayPillar = getDayPillar(year, month, day);
+    
+    // 日柱：子时（23:00-01:00）流派约定 → 日柱用次日
+    var dayForPillar = getDayPillar(year, month, day);
+    if (hour === 0) {
+        var nextDay = new Date(Date.UTC(year, month - 1, day, 12, 0, 0) + 86400000);
+        dayForPillar = getDayPillar(nextDay.getUTCFullYear(), nextDay.getUTCMonth() + 1, nextDay.getUTCDate());
+    }
+    
+    const dayPillar = dayForPillar;
     const hourPillar = getHourPillar(dayPillar.ganIndex, hour);
     
     // 日主（日干）
@@ -2789,6 +2799,8 @@ function getTrueSolarHour(hour, province, year, month, day, minute, clock) {
 
     return {
         hourIndex: hourIndex,           // 真太阳时时辰索引
+        trueHour: trueHour,             // 真太阳时钟点（用于节气比较）
+        trueMinute: trueMin,            // 真太阳时分钟
         solarMinutes: trueMinutes,      // 真太阳时分钟数
         lng: lng,
         lngOffsetMin: Math.round(lngOffsetMin),
