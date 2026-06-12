@@ -161,9 +161,11 @@ function onPaymentSuccess(token) {
   if (typeof renderPaidContent === 'function') {
     renderPaidContent();
   }
-  // 下载按钮
+  // 下载/PDF按钮
   var db = document.getElementById('downloadBtn');
   if (db) db.style.display = '';
+  var pb = document.getElementById('printBtn');
+  if (pb) pb.style.display = '';
 }
 
 // ---- 二维码弹窗 ----
@@ -248,6 +250,8 @@ function verifyAndUnlock(token) {
       if (typeof renderPaidContent === 'function') renderPaidContent();
       var db = document.getElementById('downloadBtn');
       if (db) db.style.display = '';
+      var pb = document.getElementById('printBtn');
+      if (pb) pb.style.display = '';
     } else {
       clearSaved();
       showPaywall();

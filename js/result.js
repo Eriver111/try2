@@ -1171,13 +1171,12 @@ document.addEventListener('DOMContentLoaded', function() {
     render({ bazi, daYun, shenSha });
 });
 
-// ==================== 下载完整报告 ====================
-function downloadReport() {
-    // 提取所有已渲染的 section 内容（去掉 paywall 遮罩和按钮）
+// ==================== 下载 / 保存报告 ====================
+function buildReportHTML() {
     var sections = [
+        { id: 'sizhuSection', title: '四柱解析', html: '' },
         { id: 'dayunSection', title: '大运走势', html: '' },
-        { id: 'liunianSection', title: '流年', html: '' },
-        { id: 'sizhuSection', title: '', html: '' },
+        { id: 'liunianSection', title: '流年运势', html: '' },
         { id: 'proSection', title: '专业分析', html: '' },
         { id: 'characterSection', title: '性格特征', html: '' },
         { id: 'parentsSection', title: '父母关系', html: '' },
@@ -1192,49 +1191,102 @@ function downloadReport() {
         var el = document.getElementById(sec.id);
         if (!el) return;
         var clone = el.cloneNode(true);
-        // 删掉 paywall overlay
-        var ov = clone.querySelectorAll('.paywall-overlay');
-        ov.forEach(function(o) { o.remove(); });
+        clone.querySelectorAll('.paywall-overlay').forEach(function(o) { o.remove(); });
         clone.querySelectorAll('.drawer-arrow').forEach(function(a) { a.remove(); });
+        clone.querySelectorAll('button,.share-btn,.download-btn').forEach(function(b) { b.remove(); });
+        clone.querySelectorAll('.section-drawer').forEach(function(s) { s.classList.add('drawer-open'); });
         sec.html = clone.innerHTML;
     });
 
-    // 构建报告 HTML
     var gender = _params ? (_params.gender === 'male' ? '男' : '女') : '';
     var birthStr = _params ? _params.year + '年' + _params.month + '月' + _params.day + '日' : '';
     var hourStr = _params ? SHI_CHEN_NAMES[_params.hour] || '' : '';
+    var provStr = (_params && _params.prov) ? ' · ' + _params.prov : '';
+    var dateStr = new Date().toLocaleDateString('zh-CN', {year:'numeric',month:'long',day:'numeric'});
 
-    var report = '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>知时 · 分析报告</title>\n<style>\n';
-    report += 'body{max-width:720px;margin:0 auto;padding:24px 20px 60px;font-family:"Noto Serif SC","SimSun",serif;color:#ddd;background:#111}\n';
-    report += 'h1{font-size:32px;text-align:center;color:#e0c860;letter-spacing:8px;margin-bottom:4px}\n';
-    report += '.sub{text-align:center;color:#a09060;font-size:14px;margin-bottom:24px}\n';
-    report += 'h2{font-size:20px;color:#c8a848;border-bottom:1px solid rgba(212,175,55,.2);padding-bottom:6px;margin-top:28px}\n';
-    report += 'table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}\n';
-    report += 'th,td{padding:8px 6px;text-align:center;border:1px solid rgba(255,255,255,.08)}\n';
-    report += 'th{background:rgba(212,175,55,.08);color:#dac060;font-weight:600}\n';
-    report += '.nayin{text-align:center;color:#999;font-size:13px;margin-bottom:16px}\n';
-    report += '.disclaimer{margin-top:40px;padding:16px;border-top:1px solid rgba(255,255,255,.06);text-align:center;color:#555;font-size:11px}\n';
-    report += '</style>\n</head>\n<body>\n';
-    report += '<h1>知 时</h1>\n';
-    report += '<div class="sub">知天时 · 见自己</div>\n';
-    report += '<div class="nayin">' + gender + ' · ' + birthStr + ' ' + hourStr + ' ｜ 分析日期：' + new Date().toLocaleDateString('zh-CN') + '</div>\n';
+    var css = ''
+    + '*{margin:0;padding:0;box-sizing:border-box}'
+    + 'body{max-width:800px;margin:0 auto;font-family:"Noto Serif SC","PingFang SC","Microsoft YaHei",serif;color:#e0d8c8;background:#0f0f18;padding:0}'
+    + '.cover{text-align:center;padding:80px 30px 60px;background:linear-gradient(180deg,#151520 0%,#0f0f18 100%);position:relative;border-bottom:1px solid rgba(212,175,55,.08)}'
+    + '.cover::before{content:"";position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);width:300px;height:300px;border-radius:50%;border:1px solid rgba(212,175,55,.06)}'
+    + '.cover .brand{font-size:60px;color:#e0c860;letter-spacing:20px;font-weight:900;margin-bottom:12px}'
+    + '.cover .tagline{font-size:20px;color:#a89858;letter-spacing:10px;margin-bottom:40px}'
+    + '.cover .info{display:inline-block;padding:16px 32px;border:1px solid rgba(212,175,55,.12);border-radius:12px;color:#b0a080;font-size:15px;letter-spacing:2px;line-height:2}'
+    + '.cover .info strong{color:#d8c060;font-weight:600}'
+    + '.section{margin:0;padding:0 30px}'
+    + '.section-title{font-size:22px;color:#d8be58;text-align:center;margin:40px 0 24px;letter-spacing:6px;font-weight:700;position:relative}'
+    + '.section-title::after{content:"";display:block;width:40px;height:1px;background:rgba(212,175,55,.2);margin:12px auto 0}'
+    + 'table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px}'
+    + 'th,td{padding:10px 8px;text-align:center;border:1px solid rgba(255,255,255,.06)}'
+    + 'th{background:rgba(212,175,55,.06);color:#dac060;font-weight:600;font-size:13px}'
+    + 'td{color:#c0b090;font-size:13px}'
+    + '.drawer-body{color:#b0a090;font-size:14px;line-height:1.9;padding:8px 0}'
+    + '.drawer-body p,.drawer-body div{margin-bottom:10px;color:#b0a090}'
+    + '.drawer-body .highlight,.drawer-body strong,.drawer-body b{color:#d8be58}'
+    + '.drawer-body .text-dim,.drawer-body .text-muted{color:#7a7a80}'
+    + '.section-header h2,.section-title-row{font-size:18px!important;color:#c8a848!important;text-align:center;margin:24px 0 12px!important;letter-spacing:4px}'
+    + '.item-row,.wl-row,.pr-card{background:rgba(255,255,255,.02);border-radius:8px;padding:14px 16px;margin-bottom:10px;border:1px solid rgba(255,255,255,.04)}'
+    + '.wl-wang-bar{padding:10px 12px;background:rgba(255,255,255,.015);border-radius:6px;margin:4px 0}'
+    + '.wl-wang-bar b,.wl-wang-bar strong{color:#d8be58}'
+    + '.shensha-tag,.tag{display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;margin:2px;background:rgba(212,175,55,.08);color:#d0b858;border:1px solid rgba(212,175,55,.15)}'
+    + '.shensha-tag.ji-shen,.tag.good{background:rgba(100,180,120,.06);color:#8c8;border-color:rgba(100,180,120,.12)}'
+    + '.shensha-tag.xiong-sha,.tag.bad{background:rgba(200,100,100,.06);color:#c88;border-color:rgba(200,100,100,.12)}'
+    + '.dayun-table td.active,.dayun-table td.current{background:rgba(212,175,55,.08);font-weight:600}'
+    + '.liunian-col{display:inline-block;min-width:70px;text-align:center;padding:8px 4px;border:1px solid rgba(255,255,255,.04);border-radius:6px;margin:4px;font-size:12px;color:#a0a090}'
+    + '.liunian-col.current-year{background:rgba(212,175,55,.1);border-color:rgba(212,175,55,.25);font-weight:600;color:#d8be58}'
+    + '.footer{text-align:center;padding:40px 30px;border-top:1px solid rgba(255,255,255,.04);margin-top:40px;color:#5a5a60;font-size:12px;line-height:2;letter-spacing:1px}'
+    + '.no-print{text-align:center;padding:20px 0}'
+    + '.no-print button{display:inline-block;margin:0 10px;padding:12px 28px;background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.25);color:#e0c860;font-size:15px;font-weight:600;border-radius:8px;cursor:pointer;letter-spacing:3px;font-family:inherit}'
+    + '@media print{body{background:#fff!important;color:#222!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
+    + '.cover,.section{padding-left:0;padding-right:0}'
+    + '.no-print{display:none!important}'
+    + 'table th{background:#f5f0e0!important;color:#333!important}'
+    + 'table td{color:#444!important}'
+    + '.drawer-body,.drawer-body p,.drawer-body div{color:#333!important}'
+    + '.section-title{color:#8a7030!important}'
+    + '.cover .brand{color:#8a7030!important}'
+    + 'h2,h3{color:#6a5020!important}'
+    + '@page{size:A4;margin:15mm}}';
 
-    // 把每个 section 的 HTML 写入
-    var usedTitles = {};
+    var html = '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n'
+    + '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
+    + '<title>知时 · ' + (gender==='男'?'乾造':'坤造') + ' · ' + birthStr + '</title>\n'
+    + '<style>' + css + '</style>\n</head>\n<body>\n'
+    + '<div class="no-print" style="position:sticky;top:0;background:rgba(15,15,24,.95);padding:12px 0;z-index:99;border-bottom:1px solid rgba(255,255,255,.04)">'
+    + '<button onclick="window.print()">🖨 保存为 PDF</button>'
+    + '<button onclick="history.back()">← 返回</button>'
+    + '</div>\n'
+    + '<div class="cover">\n'
+    + '<div class="brand">知 时</div>\n'
+    + '<div class="tagline">知 天 时 · 见 自 己</div>\n'
+    + '<div class="info">\n'
+    + '<strong>' + gender + '造</strong> · ' + birthStr + '<br>\n'
+    + birthStr.split('年')[0] + '年 ' + hourStr + provStr + '<br>\n'
+    + '分析日期：' + dateStr + '\n'
+    + '</div>\n</div>\n';
+
+    var used = {};
     sections.forEach(function(sec) {
         if (!sec.html || sec.html.length < 20) return;
-        if (sec.title && !usedTitles[sec.title]) {
-            report += '<h2>' + sec.title + '</h2>\n';
-            usedTitles[sec.title] = true;
+        if (sec.title && !used[sec.title]) {
+            html += '<div class="section"><div class="section-title">' + sec.title + '</div>' + sec.html + '</div>\n';
+            used[sec.title] = true;
         }
-        report += '<div>' + sec.html + '</div>\n';
     });
 
-    report += '<div class="disclaimer">※ 本报告由知时（knowbazi.online）生成，仅供学习参考与娱乐交流，不构成任何决策建议。</div>\n';
-    report += '</body>\n</html>';
+    html += '<div class="footer">'
+    + '本报告由知时（www.knowbazi.online）生成<br>'
+    + '仅供学习参考与娱乐交流，不构成任何决策建议<br>'
+    + '知天时 · 见自己'
+    + '</div>\n'
+    + '</body>\n</html>';
 
-    // 触发下载
-    var blob = new Blob([report], { type: 'text/html;charset=UTF-8' });
+    return html;
+}
+
+function downloadReport() {
+    var html = buildReportHTML();
+    var blob = new Blob([html], { type: 'text/html;charset=UTF-8' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
@@ -1244,6 +1296,16 @@ function downloadReport() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+}
+
+function openReportInNewTab() {
+    var html = buildReportHTML();
+    var blob = new Blob([html], { type: 'text/html;charset=UTF-8' });
+    var url = URL.createObjectURL(blob);
+    var w = window.open(url, '_blank');
+    if (!w) { alert('请允许弹出窗口以打开报告'); return; }
+    // 打开后 30 秒释放 blob
+    setTimeout(function() { URL.revokeObjectURL(url); }, 30000);
 }
 
 // ==================== 反馈机制 ====================
