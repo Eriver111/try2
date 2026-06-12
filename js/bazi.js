@@ -58,6 +58,13 @@ var LICHUN_HOUR = {
     2020:17,2021:23,2022:4,2023:10,2024:16,2025:22,2026:4,2027:10,2028:16,2029:21,2030:3
 };
 
+// 小寒近似时刻（北京时间小时数）— 子/丑月分界
+// 1月5-6日左右，通常在下午到晚间；默认16时
+var XIAOHAN_HOUR = {
+    2009:19,2010:0,2011:6,2012:12,2013:18,2014:0,2015:6,2016:12,2017:18,2018:23,
+    2019:5,2020:11,2021:17,2022:23,2023:4,2024:10,2025:16,2026:22,2027:4,2028:10,2029:15,2030:21
+};
+
 /**
  * 获取指定年份的12个「节」（月柱分界点）日期
  * 节不同于气，是月份的实际分界：
@@ -147,8 +154,9 @@ function getJieQiDates(year) {
             var m = bq.month;
             var d = days[i];
             var targetYear = (m === 1) ? year + 1 : year;
-            // 立春返回带钟点（用于精确到时的年柱切换）
-            var h = (i === 0) ? (LICHUN_HOUR[year] || 12) : 0;
+            // 立春和小寒返回带钟点（用于精确到时的月柱切换）
+            var h = (i === 0) ? (LICHUN_HOUR[year] || 12) :
+                    (i === 11) ? (XIAOHAN_HOUR[targetYear] || 16) : 0;
             return { name: bq.name, date: new Date(targetYear, m - 1, d, h, 0, 0) };
         });
     }
@@ -236,7 +244,14 @@ function getMonthPillar(year, month, day, hour, clock) {
         // 在立春之前，属于上一年的丑月(1)或之前的月份
         yearForMonthGan = year - 1;
         
-        if ((month === 1 && day >= xiaoHan.getDate()) || 
+        if (month === 1 && day === xiaoHan.getDate()) {
+            // 小寒当天：判断具体时刻
+            if ((clock || 0) >= xiaoHan.getHours()) {
+                zhiIndex = 1; // 丑月
+            } else {
+                zhiIndex = 0; // 子月
+            }
+        } else if ((month === 1 && day > xiaoHan.getDate()) || 
             (month === 2 && day < realLiChunDay)) {
             // 1月小寒后 ~ 2月立春前 = 丑月
             zhiIndex = 1;
