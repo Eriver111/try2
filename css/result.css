@@ -1693,3 +1693,37 @@
     .section-header h2 { font-size: 16px; }
     .taiji-deco { opacity: 0.06; }
 }
+/* ---- 反馈机制 ---- */
+.feedback-link { font-size:13px;color:rgba(180,160,120,.5);cursor:pointer;margin-top:8px;display:inline-block;
+  border-bottom:1px dashed rgba(180,160,120,.2);padding-bottom:2px;transition:all .2s }
+.feedback-link:hover { color:rgba(220,200,140,.8);border-color:rgba(220,200,140,.4) }
+.feedback-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;
+  align-items:center;justify-content:center }
+.feedback-overlay.show { display:flex }
+.feedback-dialog { background:#1a1a2e;border:1px solid rgba(212,175,55,.15);border-radius:16px;
+  padding:32px 28px 24px;width:90%;max-width:420px;position:relative }
+.feedback-close { position:absolute;top:12px;right:16px;font-size:20px;color:rgba(255,255,255,.2);
+  cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+  border-radius:50%;transition:all .2s }
+.feedback-close:hover { color:rgba(255,255,255,.6);background:rgba(255,255,255,.05) }
+.feedback-title { font-size:22px;color:#e0c860;text-align:center;font-weight:600;letter-spacing:2px;
+  margin-bottom:6px }
+.feedback-sub { font-size:13px;color:rgba(255,255,255,.3);text-align:center;margin-bottom:20px;
+  letter-spacing:1px }
+.feedback-textarea { width:100%;min-height:120px;background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px;color:#ccc;
+  font-size:14px;resize:vertical;font-family:inherit;line-height:1.6;outline:none;transition:border .2s }
+.feedback-textarea:focus { border-color:rgba(212,175,55,.3) }
+.feedback-textarea::placeholder { color:rgba(255,255,255,.15) }
+.feedback-input { width:100%;margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#ccc;font-size:14px;
+  font-family:inherit;outline:none;transition:border .2s }
+.feedback-input:focus { border-color:rgba(212,175,55,.3) }
+.feedback-input::placeholder { color:rgba(255,255,255,.15) }
+.feedback-submit { width:100%;margin-top:18px;padding:12px;background:rgba(212,175,55,.12);
+  border:1px solid rgba(212,175,55,.3);color:#e0c860;font-size:15px;font-weight:600;
+  border-radius:10px;cursor:pointer;letter-spacing:2px;font-family:inherit;
+  transition:all .2s }
+.feedback-submit:hover { background:rgba(212,175,55,.2) }
+.feedback-submit:disabled { opacity:.4;cursor:not-allowed }
+.feedback-result { text-align:center;margin-top:14px;font-size:13px;color:#8a8;min-height:20px }
