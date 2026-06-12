@@ -1518,6 +1518,24 @@
     opacity: 0.5; cursor: not-allowed;
 }
 
+.paywall-btn-check {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 7px 0;
+    background: transparent;
+    border: none;
+    color: rgba(160,140,100,0.6);
+    font-size: 12px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    font-family: inherit;
+    text-decoration: underline;
+    -webkit-appearance: none;
+    transition: color 0.2s;
+}
+.paywall-btn-check:hover { color: rgba(200,170,120,0.9); }
+
 .paywall-tip {
     font-size: 11px; color: var(--text-dim);
     line-height: 1.6;
