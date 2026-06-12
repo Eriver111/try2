@@ -155,8 +155,9 @@ function getJieQiDates(year) {
             var d = days[i];
             var targetYear = (m === 1) ? year + 1 : year;
             // 立春和小寒返回带钟点（用于精确到时的月柱切换）
+            // 都使用搜索年份 year 作为键值（和 LICHUN_HOUR/XIAOHAN_HOUR 表一致）
             var h = (i === 0) ? (LICHUN_HOUR[year] || 12) :
-                    (i === 11) ? (XIAOHAN_HOUR[targetYear] || 16) : 0;
+                    (i === 11) ? (XIAOHAN_HOUR[year] || 16) : 0;
             return { name: bq.name, date: new Date(targetYear, m - 1, d, h, 0, 0) };
         });
     }
