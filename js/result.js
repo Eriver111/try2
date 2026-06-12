@@ -1245,3 +1245,58 @@ function downloadReport() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
+
+// ==================== 反馈机制 ====================
+function showFeedback() {
+    document.getElementById('feedbackOverlay').classList.add('show');
+    document.getElementById('feedbackResult').textContent = '';
+    document.getElementById('feedbackMsg').value = '';
+    document.getElementById('feedbackContact').value = '';
+}
+
+function closeFeedback(e) {
+    if (e && e.target !== document.getElementById('feedbackOverlay')) return;
+    document.getElementById('feedbackOverlay').classList.remove('show');
+}
+
+function submitFeedback() {
+    var msg = document.getElementById('feedbackMsg').value.trim();
+    if (!msg) {
+        document.getElementById('feedbackResult').textContent = '请先写下你的想法';
+        return;
+    }
+    var contact = document.getElementById('feedbackContact').value.trim();
+    var btn = document.querySelector('.feedback-submit');
+    btn.disabled = true;
+    btn.textContent = '提交中...';
+    document.getElementById('feedbackResult').textContent = '';
+
+    // 收集当前八字信息做上下文
+    var ctx = {};
+    if (_params) {
+        ctx.year = _params.year; ctx.month = _params.month; ctx.day = _params.day;
+        ctx.hour = _params.hour; ctx.gender = _params.gender; ctx.prov = _params.prov || '';
+    }
+
+    fetch('/api/feedback.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg, contact: contact, context: ctx })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.ok) {
+            document.getElementById('feedbackResult').textContent = '✓ 感谢你的反馈！我们会认真对待每一条建议';
+            setTimeout(function() { closeFeedback(); }, 2000);
+        } else {
+            document.getElementById('feedbackResult').textContent = '提交失败，请稍后重试';
+        }
+    })
+    .catch(function() {
+        document.getElementById('feedbackResult').textContent = '网络错误，请稍后重试';
+    })
+    .finally(function() {
+        btn.disabled = false;
+        btn.textContent = '提交反馈';
+    });
+}
