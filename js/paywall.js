@@ -68,6 +68,7 @@ function showPaywall() {
       +     '<span class="paywall-one-time" style="display:block;font-size:10px;color:var(--text-dim);margin-top:2px">一次付费，全部板块永久解锁（7天内）</span>'
       +   '</div>'
       +   '<button class="paywall-btn" onclick="startPay()">解锁全部内容</button>'
+      +   '<button class="paywall-btn-check" id="checkBtnManual" onclick="checkPaymentManually()" style="display:none;margin-top:14px">我已付过款，刷新状态</button>'
       +   '<div class="paywall-tip" id="paywallTip" style="display:none;margin-top:8px"></div>'
       + '</div>';
     body.classList.add('paywall-active');
@@ -91,6 +92,8 @@ function hidePaywall() {
 
 // ---- 发起支付 ----
 function startPay() {
+  // 先停掉旧的轮询
+  stopPolling();
   var allBtns = document.querySelectorAll('.paywall-btn');
   allBtns.forEach(function(b) { b.disabled = true; b.textContent = '创建订单中...'; });
 
@@ -113,6 +116,10 @@ function startPay() {
     }
     _orderId = data.orderId;
     allBtns.forEach(function(b) { b.textContent = '等待支付...'; });
+
+    // 显示「我已付过款」按钮
+    var manualBtn = document.getElementById('checkBtnManual');
+    if (manualBtn) manualBtn.style.display = 'block';
 
     // 弹出二维码
     showQrModal(data.qrcode || data.payUrl, data.amount);
@@ -183,9 +190,43 @@ function hideQrModal() {
 
 function closeQrModal() {
   hideQrModal();
-  stopPolling();
+  // 不停止轮询！用户可能正在支付中，只是暂时关掉弹窗
+  // stopPolling 移到 onPaymentSuccess 和 startPay 新订单时调用
   var allBtns = document.querySelectorAll('.paywall-btn');
   allBtns.forEach(function(b) { b.disabled = false; b.textContent = '解锁全部内容'; });
+}
+
+// ---- 手动检查支付状态（用户付了钱但没自动解锁时用）----
+function checkPaymentManually() {
+  var tip = document.getElementById('paywallTip');
+  if (tip) { tip.style.display = 'block'; tip.textContent = '正在查询支付状态...'; }
+
+  // 如果有 orderId，直接用订单号查
+  if (_orderId) {
+    fetch(API_BASE + '/check-order.js?orderId=' + _orderId)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.status === 'paid' && data.token) {
+          if (tip) tip.textContent = '✓ 支付成功！正在解锁...';
+          onPaymentSuccess(data.token);
+        } else {
+          if (tip) tip.textContent = '暂未查到支付记录，请确认是否已完成付款';
+        }
+      })
+      .catch(function() {
+        if (tip) tip.textContent = '网络错误，请稍后重试';
+      });
+    return;
+  }
+
+  // 没有 orderId：尝试用本地保存的 token 重新验证
+  var saved = readSaved();
+  if (saved && saved.token) {
+    verifyAndUnlock(saved.token);
+    return;
+  }
+
+  if (tip) tip.textContent = '未找到订单记录，请先点击「解锁全部内容」创建订单';
 }
 
 // ---- token 验证 ----
