@@ -659,14 +659,16 @@ function calculateDaYun(monthPillar, yearPillar, gender, birthYear, birthMonth, 
         var preLiChun = (birthMonth < 2) || (birthMonth === 2 && birthDay < 5);
         var showAge = Math.floor(qiYunAge + 1) + (preLiChun ? 1 : 0) + i * 10;
         const startYearExact = birthYear + qiYunAge + i * 10;
-        const endYearExact = birthYear + qiYunAge + (i + 1) * 10;
+        const startYear = Math.round(startYearExact);
+        // 流年=10年，范围 startYear ~ startYear+9
+        const endYear = startYear + 9;
 
         daYunList.push({
             gan: TIAN_GAN[ganIdx], zhi: DI_ZHI[zhiIdx],
             ganIndex: ganIdx, zhiIndex: zhiIdx,
             displayAge: String(showAge),
-            startYear: Math.round(startYearExact),
-            endYear: Math.floor(endYearExact)
+            startYear: startYear,
+            endYear: endYear
         });
     }
 
