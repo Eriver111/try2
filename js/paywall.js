@@ -156,9 +156,14 @@ function stopPolling() {
 function onPaymentSuccess(token) {
   saveToken(token, _baziHash);
   hidePaywall();
+  stopPolling();
+  hideQrModal();
   if (typeof renderPaidContent === 'function') {
     renderPaidContent();
   }
+  // 下载按钮
+  var db = document.getElementById('downloadBtn');
+  if (db) db.style.display = '';
 }
 
 // ---- 二维码弹窗 ----
@@ -207,9 +212,9 @@ function checkPaymentManually() {
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (data.status === 'paid' && data.token) {
-          if (tip) tip.textContent = '✓ 支付成功！正在解锁...';
-          onPaymentSuccess(data.token);
-        } else {
+           if (tip) tip.textContent = '✓ 支付成功！正在解锁...';
+           onPaymentSuccess(data.token);
+         } else {
           if (tip) tip.textContent = '暂未查到支付记录，请确认是否已完成付款';
         }
       })
@@ -241,6 +246,8 @@ function verifyAndUnlock(token) {
     if (data.valid) {
       hidePaywall();
       if (typeof renderPaidContent === 'function') renderPaidContent();
+      var db = document.getElementById('downloadBtn');
+      if (db) db.style.display = '';
     } else {
       clearSaved();
       showPaywall();

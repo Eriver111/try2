@@ -1166,3 +1166,78 @@ document.addEventListener('DOMContentLoaded', function() {
 
     render({ bazi, daYun, shenSha });
 });
+
+// ==================== 下载完整报告 ====================
+function downloadReport() {
+    // 提取所有已渲染的 section 内容（去掉 paywall 遮罩和按钮）
+    var sections = [
+        { id: 'dayunSection', title: '大运走势', html: '' },
+        { id: 'liunianSection', title: '流年', html: '' },
+        { id: 'sizhuSection', title: '', html: '' },
+        { id: 'proSection', title: '专业分析', html: '' },
+        { id: 'characterSection', title: '性格特征', html: '' },
+        { id: 'parentsSection', title: '父母关系', html: '' },
+        { id: 'thisYearSection', title: '今年参考', html: '' },
+        { id: 'marriageSection', title: '感情参考', html: '' },
+        { id: 'wealthSection', title: '财运参考', html: '' },
+        { id: 'studySection', title: '学业参考', html: '' },
+        { id: 'fortuneSection', title: '五年流年', html: '' }
+    ];
+
+    sections.forEach(function(sec) {
+        var el = document.getElementById(sec.id);
+        if (!el) return;
+        var clone = el.cloneNode(true);
+        // 删掉 paywall overlay
+        var ov = clone.querySelectorAll('.paywall-overlay');
+        ov.forEach(function(o) { o.remove(); });
+        clone.querySelectorAll('.drawer-arrow').forEach(function(a) { a.remove(); });
+        sec.html = clone.innerHTML;
+    });
+
+    // 构建报告 HTML
+    var gender = _params ? (_params.gender === 'male' ? '男' : '女') : '';
+    var birthStr = _params ? _params.year + '年' + _params.month + '月' + _params.day + '日' : '';
+    var hourStr = _params ? SHI_CHEN_NAMES[_params.hour] || '' : '';
+
+    var report = '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>知时 · 分析报告</title>\n<style>\n';
+    report += 'body{max-width:720px;margin:0 auto;padding:24px 20px 60px;font-family:"Noto Serif SC","SimSun",serif;color:#ddd;background:#111}\n';
+    report += 'h1{font-size:32px;text-align:center;color:#e0c860;letter-spacing:8px;margin-bottom:4px}\n';
+    report += '.sub{text-align:center;color:#a09060;font-size:14px;margin-bottom:24px}\n';
+    report += 'h2{font-size:20px;color:#c8a848;border-bottom:1px solid rgba(212,175,55,.2);padding-bottom:6px;margin-top:28px}\n';
+    report += 'table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}\n';
+    report += 'th,td{padding:8px 6px;text-align:center;border:1px solid rgba(255,255,255,.08)}\n';
+    report += 'th{background:rgba(212,175,55,.08);color:#dac060;font-weight:600}\n';
+    report += '.nayin{text-align:center;color:#999;font-size:13px;margin-bottom:16px}\n';
+    report += '.disclaimer{margin-top:40px;padding:16px;border-top:1px solid rgba(255,255,255,.06);text-align:center;color:#555;font-size:11px}\n';
+    report += '</style>\n</head>\n<body>\n';
+    report += '<h1>知 时</h1>\n';
+    report += '<div class="sub">知天时 · 见自己</div>\n';
+    report += '<div class="nayin">' + gender + ' · ' + birthStr + ' ' + hourStr + ' ｜ 分析日期：' + new Date().toLocaleDateString('zh-CN') + '</div>\n';
+
+    // 把每个 section 的 HTML 写入
+    var usedTitles = {};
+    sections.forEach(function(sec) {
+        if (!sec.html || sec.html.length < 20) return;
+        if (sec.title && !usedTitles[sec.title]) {
+            report += '<h2>' + sec.title + '</h2>\n';
+            usedTitles[sec.title] = true;
+        }
+        report += '<div>' + sec.html + '</div>\n';
+    });
+
+    report += '<div class="disclaimer">※ 本报告由知时（knowbazi.online）生成，仅供学习参考与娱乐交流，不构成任何决策建议。</div>\n';
+    report += '</body>\n</html>';
+
+    // 触发下载
+    var blob = new Blob([report], { type: 'text/html;charset=UTF-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    var fn = '知时报告_' + (_params ? _params.year + _params.month + _params.day : '') + '.html';
+    a.download = fn;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
