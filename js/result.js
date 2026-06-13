@@ -889,7 +889,7 @@ function renderThisYear(bazi, gender) {
     el.innerHTML = ''
         // 标题行
         + '<div style="text-align:center;margin-bottom:18px">'
-        +   '<div style="font-family:\'ZCOOL XiaoWei\',\'Noto Serif SC\',serif;font-size:24px;letter-spacing:4px;color:var(--gold);margin-bottom:4px">' + ty.year + ' 年运势</div>'
+        +   '<div style="font-family:\'STKaiti\',\'KaiTi\',\'Source Han Serif SC\',serif;font-size:24px;letter-spacing:4px;color:var(--gold);margin-bottom:4px">' + ty.year + ' 年运势</div>'
         +   '<div style="font-size:13px;color:var(--text-dim);letter-spacing:2px">'
         +     '流年 <span style="color:' + overallColor + ';font-weight:700">' + ty.gan + ty.zhi + '</span>'
         +     ' · 十神 <span style="color:var(--text-primary);font-weight:700">' + ty.shiShen + '</span>'
@@ -956,7 +956,7 @@ function renderWealth(bazi, gender) {
     el.innerHTML = ''
         // ==== 顶部概览 ====
         + '<div style="text-align:center;margin-bottom:18px">'
-        +   '<div style="font-family:\'ZCOOL XiaoWei\',\'Noto Serif SC\',serif;font-size:22px;letter-spacing:4px;color:' + caiColor + ';margin-bottom:2px">'
+        +   '<div style="font-family:\'STKaiti\',\'KaiTi\',\'Source Han Serif SC\',serif;font-size:22px;letter-spacing:4px;color:' + caiColor + ';margin-bottom:2px">'
         +     ' ' + wl.caiWX + '为财'
         +   '</div>'
         +   '<div style="font-size:12px;color:var(--text-dim);letter-spacing:2px">出现 ' + wl.caiCount + ' 次 · 命格底气 ' + (wangLabels[wl.wangStatus] || wl.wangStatus) + ' · 财在' + posText + '</div>'
@@ -1206,7 +1206,7 @@ function buildReportHTML() {
 
     var css = ''
     + '*{margin:0;padding:0;box-sizing:border-box}'
-    + 'body{max-width:800px;margin:0 auto;font-family:"Noto Serif SC","PingFang SC","Microsoft YaHei",serif;color:#e0d8c8;background:#0f0f18;padding:0}'
+    + 'body{max-width:800px;margin:0 auto;font-family:"Source Han Serif SC","PingFang SC","Microsoft YaHei",serif;color:#e0d8c8;background:#0f0f18;padding:0}'
     + '.cover{text-align:center;padding:80px 30px 60px;background:linear-gradient(180deg,#151520 0%,#0f0f18 100%);position:relative;border-bottom:1px solid rgba(212,175,55,.08)}'
     + '.cover::before{content:"";position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);width:300px;height:300px;border-radius:50%;border:1px solid rgba(212,175,55,.06)}'
     + '.cover .brand{font-size:60px;color:#e0c860;letter-spacing:20px;font-weight:900;margin-bottom:12px}'
