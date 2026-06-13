@@ -41,7 +41,7 @@ var MoXingHe = (function(){
     this.y=(Math.random()-0.1)*1.2;
     this.vx=(Math.random()-0.5)*0.00012;
     this.vy=(Math.random()-0.5)*0.00008;
-    this.fontSize=14+Math.floor(Math.random()*22); // 14-36px
+    this.fontSize=12+Math.floor(Math.random()*12); // 12-24px
     this.life=12+Math.random()*18; // 12-30秒生命
     this.age=0;
     this.fading='in';
@@ -53,15 +53,15 @@ var MoXingHe = (function(){
     this.age+=dt;
     if(this.age>this.life){this.reset();this.age=0;}
     var p=this.age/this.life;
-    if(p<0.15)this.alpha=p/0.15*0.12; // 渐入
-    else if(p>0.75)this.alpha=(1-p)/0.25*0.12; // 渐出
-    else this.alpha=0.12; // 保持
+    if(p<0.15)this.alpha=p/0.15*0.08; // 渐入
+    else if(p>0.75)this.alpha=(1-p)/0.25*0.08; // 渐出
+    else this.alpha=0.08; // 保持
   };
   FloatingText.prototype.draw=function(){
     ctx.save();
     ctx.globalAlpha=this.alpha;
     ctx.font='normal '+this.fontSize+'px "Source Han Serif SC","STKaiti","KaiTi","FangSong",serif';
-    ctx.fillStyle='#dac878';ctx.shadowColor='rgba(218,200,120,.15)';ctx.shadowBlur=4;
+    ctx.fillStyle='#dac878';ctx.shadowColor='rgba(218,200,120,.06)';ctx.shadowBlur=2;
     ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText(this.text,this.x*w,this.y*h);
     ctx.restore();
