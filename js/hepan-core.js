@@ -269,48 +269,48 @@ function analyzeDailyRelation(p1, p2) {
     case '合':
       var key1 = dg1 + dg2, key2 = dg2 + dg1;
       ganDesc = GAN_HE_DESCS[key1] || GAN_HE_DESCS[key2] || (dg1 + '和' + dg2 + '天干五合，是非常难得的缘分，天生的吸引力让你们走到一起。');
-      ganScore = 35;
+      ganScore = 40;
       break;
     case '生':
       ganDesc = '你的日干' + HP_GWX[dg1] + '在生对方的日干' + HP_GWX[dg2] + '，你的能量在滋养对方。在关系里你更愿意付出，对方也能感受到你的好。这是一种温暖的连接。';
-      ganScore = 25;
+      ganScore = 30;
       break;
     case '被生':
       ganDesc = '对方的日干' + HP_GWX[dg2] + '在生你的日干' + HP_GWX[dg1] + '，对方的能量在支持着你。你在关系中是被照顾的一方，要记得珍惜和回馈。';
-      ganScore = 25;
+      ganScore = 30;
       break;
     case '比':
       ganDesc = '你俩的日干都是' + HP_GWX[dg1] + '行，五行相同说明你们骨子里很像。懂得彼此的想法和感受，有天然的亲近感，但太像了有时候也会暗自较劲。';
-      ganScore = 20;
+      ganScore = 25;
       break;
     case '克':
       ganDesc = '你的日干' + HP_GWX[dg1] + '在克对方的日干' + HP_GWX[dg2] + '。在关系里你习惯占据主导位置，对方可能会感到一些压力。注意不要太强势，给彼此留点空间。';
-      ganScore = 10;
+      ganScore = 18;
       break;
     case '被克':
       ganDesc = '对方的日干' + HP_GWX[dg2] + '在克你的日干' + HP_GWX[dg1] + '。你在关系中容易被动、迁就对方。心里有话要说出来，健康的感情不是单方面的退让。';
-      ganScore = 10;
+      ganScore = 18;
       break;
     default:
       ganDesc = '你们的天干之间没有太强的互动，关系基调比较平和，需要靠多沟通来增进感情。';
-      ganScore = 15;
+      ganScore = 20;
   }
 
   // 地支描述
   var zhiDesc = ZHI_REL_DESCS[zr] || (zr === '三合' ? ZHI_REL_DESCS['三合'] : '日支关系比较中性，需要在日常生活中慢慢磨合。');
   var zhiScore = 0;
   switch (zr) {
-    case '六合': zhiScore = 30; break;
-    case '三合': zhiScore = 25; break;
+    case '六合': zhiScore = 35; break;
+    case '三合': zhiScore = 30; break;
     case '生':
-    case '被生': zhiScore = 22; break;
-    case '比': zhiScore = 18; break;
+    case '被生': zhiScore = 28; break;
+    case '比': zhiScore = 22; break;
     case '克':
-    case '被克': zhiScore = 12; break;
-    case '六冲': zhiScore = 5; break;
-    case '六害': zhiScore = 3; break;
-    case '相刑': zhiScore = 2; break;
-    default: zhiScore = 15;
+    case '被克': zhiScore = 18; break;
+    case '六冲': zhiScore = 10; break;
+    case '六害': zhiScore = 8; break;
+    case '相刑': zhiScore = 8; break;
+    default: zhiScore = 18;
   }
 
   // 盲派夫妻宫特殊判断
@@ -342,8 +342,8 @@ function analyzeDailyRelation(p1, p2) {
 
   // 综合分数
   var totalScore = ganScore + zhiScore;
-  totalScore = Math.min(totalScore, 60); // cap at 60 for this section
-  totalScore = Math.max(totalScore, 5);
+  totalScore = Math.min(totalScore, 75); // cap at 75
+  totalScore = Math.max(totalScore, 8);
 
   return {
     ganRelation: gr,
@@ -388,7 +388,7 @@ function analyzeWuxingComplement(p1, p2) {
   var p2WxDesc = describeWuxingProfile(w2, p2.name);
 
   var detail = '';
-  var complementScore = 50; // base
+  var complementScore = 58; // base
 
   if (complementPairs.length >= 3) {
     detail = p1WxDesc + ' ' + p2WxDesc + ' 你们五行互补非常明显——';
@@ -396,17 +396,17 @@ function analyzeWuxingComplement(p1, p2) {
       return cp.from + '的' + WX_ELEMENT_NAMES[cp.wx] + '刚好补上' + cp.to + '的缺口';
     });
     detail += cpDescs.join('，') + '。这就像拼图刚好对上，对方身上有你需要的东西，相处久了会发现缺了对方反而不完整。互补性很强，是天生的好搭档。';
-    complementScore = 90;
+    complementScore = 95;
   } else if (complementPairs.length >= 1) {
     detail = p1WxDesc + ' ' + p2WxDesc + ' 你们有一定的互补性——';
     var cpDescs2 = complementPairs.map(function(cp) {
       return cp.from + '的' + WX_ELEMENT_NAMES[cp.wx] + '刚好补上' + cp.to + '的缺口';
     });
     detail += cpDescs2.join('，') + '。虽然在有些方面还需要磨合，但你们能给彼此提供对方没有的东西，这是关系的重要基础。';
-    complementScore = 70;
+    complementScore = 78;
   } else {
     detail = p1WxDesc + ' ' + p2WxDesc + ' 你们的五行分布比较相似，没有特别明显的互补关系。这意味着你们不会特别需要对方来补充自己，但也不会因为五行差异产生矛盾。好处是相处轻松不累，坏处是少了那种「非你不可」的吸引力。';
-    complementScore = 50;
+    complementScore = 58;
   }
 
   // 五行是否太偏 - 某个五行过多或过少
@@ -524,9 +524,9 @@ function calcDayGanStrength(person) {
   else if (score >= 65) { level = '偏旺'; label = '元气较足'; }
   else if (score >= 45) { level = '中和偏旺'; label = '元气适中偏强'; }
   else if (score >= 35) { level = '中和'; label = '元气均衡'; }
-  else if (score >= 25) { level = '中和偏弱'; label = '元气适中偏柔'; }
-  else if (score >= 15) { level = '偏弱'; label = '元气偏弱'; }
-  else { level = '极弱'; label = '元气不足'; }
+  else if (score >= 25) { level = '中和偏柔'; label = '元气适中偏柔'; }
+  else if (score >= 15) { level = '偏柔'; label = '元气偏柔'; }
+  else { level = '清秀'; label = '元气清秀'; }
 
   return { level: level, label: label, score: score };
 }
@@ -1164,9 +1164,9 @@ function calculateOverallScore(dailyRelation, wuxingComplement, crossPillars, da
     total += calcCrossPillarScore(crossPillars) * 0.25;
     // 日干旺衰平衡 15分
     var strengthDiff = Math.abs(dayGanStrength.p1Strength.score - dayGanStrength.p2Strength.score);
-    total += Math.max(0, 15 - strengthDiff * 0.25);
-    // 稳定加分 10分
-    total += 10;
+    total += Math.max(0, 15 - strengthDiff * 0.2);
+    // 稳定加分 15分
+    total += 15;
   } else if (relationType === '情侣') {
     // 日柱吸引力 35分
     total += dailyRelation.score * 0.58;
@@ -1176,22 +1176,22 @@ function calculateOverallScore(dailyRelation, wuxingComplement, crossPillars, da
     total += calcCrossPillarScore(crossPillars) * 0.2;
     // 旺衰平衡 10分
     var diff2 = Math.abs(dayGanStrength.p1Strength.score - dayGanStrength.p2Strength.score);
-    total += Math.max(0, 10 - diff2 * 0.2);
-    // 激情加分 10分
-    total += 10;
+    total += Math.max(0, 10 - diff2 * 0.15);
+    // 激情加分 15分
+    total += 15;
   } else if (relationType === '朋友') {
     // 比劫关系 20分
     total += dailyRelation.score * 0.33;
     // 五行平衡 30分 (相似性比互补性更重要)
-    var balanceScore = 100 - Math.abs(wuxingComplement.complementScore - 50) * 1.5;
+    var balanceScore = 100 - Math.abs(wuxingComplement.complementScore - 50) * 1.2;
     total += Math.max(0, balanceScore) * 0.3;
     // 跨盘 20分
     total += calcCrossPillarScore(crossPillars) * 0.2;
     // 旺衰 15分
     var diff3 = Math.abs(dayGanStrength.p1Strength.score - dayGanStrength.p2Strength.score);
-    total += Math.max(0, 15 - diff3 * 0.25);
-    // 默契加分 15分
-    total += 15;
+    total += Math.max(0, 15 - diff3 * 0.2);
+    // 默契加分 20分
+    total += 20;
   }
 
   total = Math.round(total);
@@ -1211,14 +1211,14 @@ function calculateOverallScore(dailyRelation, wuxingComplement, crossPillars, da
 
 /** 计算跨盘和谐分数 */
 function calcCrossPillarScore(crossPillars) {
-  if (!crossPillars || crossPillars.length === 0) return 50;
-  var score = 50;
+  if (!crossPillars || crossPillars.length === 0) return 65;
+  var score = 65;
   crossPillars.forEach(function(cp) {
     switch (cp.type) {
-      case '合': score += 8; break;
-      case '生': score += 4; break;
-      case '冲': score -= 6; break;
-      case '克': score -= 3; break;
+      case '合': score += 10; break;
+      case '生': score += 5; break;
+      case '冲': score -= 5; break;
+      case '克': score -= 2; break;
     }
   });
   return Math.min(100, Math.max(0, score));
