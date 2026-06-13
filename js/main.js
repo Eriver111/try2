@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', function() {
   initProvince();
   initHourSelects();
   initEvents();
+  // 页面初始：农历面板隐藏，禁用内部字段防止浏览器校验
+  var lp = document.getElementById('lunarPanel');
+  if (lp) setPanelFields(lp, true);
 });
 
 function initSolarSelects() {
@@ -113,18 +116,26 @@ function initProvince() {
 }
 
 function initEvents() {
-  document.getElementById('sYear').addEventListener('change', function() { updateSolarDays(); });
-  document.getElementById('sMonth').addEventListener('change', function() { updateSolarDays(); });
-  document.getElementById('lYear').addEventListener('change', function() { updateLunarMonths(); });
-  document.getElementById('lMonth').addEventListener('change', function() { updateLunarDays(); });
-  document.getElementById('birthForm').addEventListener('submit', handleSubmit);
+  var sY = document.getElementById('sYear');
+  var sM = document.getElementById('sMonth');
+  var lY = document.getElementById('lYear');
+  var lM = document.getElementById('lMonth');
+  var form = document.getElementById('birthForm');
+  if (sY) sY.addEventListener('change', function() { updateSolarDays(); });
+  if (sM) sM.addEventListener('change', function() { updateSolarDays(); });
+  if (lY) lY.addEventListener('change', function() { updateLunarMonths(); });
+  if (lM) lM.addEventListener('change', function() { updateLunarDays(); });
+  if (form) form.addEventListener('submit', handleSubmit);
 }
 
 // ---- 公历日期联动 ----
 function updateSolarDays() {
-  var y = parseInt(document.getElementById('sYear').value);
-  var m = parseInt(document.getElementById('sMonth').value);
+  var ys = document.getElementById('sYear');
+  var ms = document.getElementById('sMonth');
   var dS = document.getElementById('sDay');
+  if (!ys || !ms || !dS) return;
+  var y = parseInt(ys.value);
+  var m = parseInt(ms.value);
   if (!y || !m) { dS.innerHTML = '<option value="">选择日期</option>'; return; }
   var max = new Date(y, m, 0).getDate();
   var cur = dS.value;
@@ -132,7 +143,7 @@ function updateSolarDays() {
   for (var d = 1; d <= max; d++) {
     var o = document.createElement('option'); o.value = d; o.textContent = d + '日'; dS.appendChild(o);
   }
-  if (cur && cur <= max) dS.value = cur;
+  if (cur && parseInt(cur) <= max) dS.value = cur;
 }
 
 // ---- 农历月份联动 ----
@@ -241,27 +252,32 @@ function switchMode(mode) {
 
   if (oldPanel === newPanel) return;
 
-  // 淡出旧面板
-  oldPanel.style.opacity = '1';
-  oldPanel.style.transition = 'opacity .2s ease-out';
-  oldPanel.style.opacity = '0';
+  // 隐藏旧面板、显示新面板
+  oldPanel.classList.remove('active');
+  newPanel.classList.add('active');
 
-  setTimeout(function() {
-    oldPanel.classList.remove('active');
-    oldPanel.style.opacity = '';
-    newPanel.classList.add('active');
-    newPanel.style.opacity = '0';
-    newPanel.style.transition = 'opacity .25s ease-out';
-    requestAnimationFrame(function() {
-      newPanel.style.opacity = '1';
-    });
-    setTimeout(function() {
-      newPanel.style.opacity = '';
-      newPanel.style.transition = '';
-    }, 260);
-  }, 200);
+  // 禁用隐藏面板的所有表单字段，避免浏览器 HTML5 校验拦截
+  if (oldPanel) setPanelFields(oldPanel, true);
+  if (newPanel) setPanelFields(newPanel, false);
 
   document.getElementById('lunarPreview').classList.remove('show');
+}
+
+function setPanelFields(panel, disabled) {
+  var fields = panel.querySelectorAll('select, input');
+  for (var i = 0; i < fields.length; i++) {
+    if (disabled) {
+      fields[i].setAttribute('data-was-required', fields[i].hasAttribute('required'));
+      fields[i].removeAttribute('required');
+      fields[i].disabled = true;
+    } else {
+      if (fields[i].getAttribute('data-was-required') === 'true') {
+        fields[i].setAttribute('required', '');
+      }
+      fields[i].removeAttribute('data-was-required');
+      fields[i].disabled = false;
+    }
+  }
 }
 
 // ---- 提交 ----
@@ -286,9 +302,15 @@ function handleSubmit(e) {
     month = parseInt(document.getElementById('sMonth').value);
     day = parseInt(document.getElementById('sDay').value);
     hour = parseInt(document.getElementById('sHour').value);
+
+    if (!year || !month || !day || isNaN(hour)) {
+      alert('请完整填写所有信息'); btn.classList.remove('loading'); btn.textContent='起盘推演'; return;
+    }
+
     var hSel = document.getElementById('sHour');
-    clock = hSel.selectedOptions[0] ? hSel.selectedOptions[0].getAttribute('data-clock') : null;
-    minute = parseInt(document.getElementById('sMinute').value) || 0;
+    clock = hSel && hSel.selectedOptions[0] ? hSel.selectedOptions[0].getAttribute('data-clock') : null;
+    var mEl = document.getElementById('sMinute');
+    minute = (mEl && mEl.value) ? parseInt(mEl.value) || 0 : 0;
   } else {
     var ly = parseInt(document.getElementById('lYear').value);
     var mV = document.getElementById('lMonth').value;
