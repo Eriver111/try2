@@ -24,7 +24,7 @@
 }
 html{font-size:16px;-webkit-font-smoothing:antialiased}
 body{
-  font-family:'Noto Serif SC','PingFang SC','Source Han Serif SC','SimSun',serif;
+  font-family:'Source Han Serif SC','Noto Serif SC','PingFang SC','Songti SC','SimSun',serif;
   background:var(--ink);
   color:var(--tx);
   min-height:100vh;overflow-x:hidden;

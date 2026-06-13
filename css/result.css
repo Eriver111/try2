@@ -31,7 +31,7 @@
 .back-link:hover { color: var(--gold); }
 
 .result-title {
-    font-family: 'Ma Shan Zheng', cursive;
+    font-family: 'STKaiti','KaiTi','FangSong',cursive;
     font-size: 36px;
     color: var(--gold);
     letter-spacing: 8px;
@@ -125,7 +125,7 @@
 }
 
 .drawer-toggle h2 {
-    font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+    font-family: 'STKaiti','KaiTi','FangSong','Source Han Serif SC',serif;
     font-size: 18px;
     font-weight: 400;
     color: var(--gold);
@@ -203,7 +203,7 @@
 }
 
 .dayun-gz {
-    font-family: 'Noto Serif SC', serif;
+    font-family: 'Source Han Serif SC','Noto Serif SC','PingFang SC','Songti SC','SimSun',serif;
     font-size: 20px;
     font-weight: 700;
     color: #e0d8c8;
@@ -302,7 +302,7 @@
 }
 
 .liunian-gz {
-    font-family: 'Noto Serif SC', serif;
+    font-family: 'Source Han Serif SC','Noto Serif SC','PingFang SC','Songti SC','SimSun',serif;
     font-size: 17px;
     font-weight: 700;
     color: #e0d8c8;
@@ -350,7 +350,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Noto Serif SC', serif;
+    font-family: 'Source Han Serif SC','Noto Serif SC','PingFang SC','Songti SC','SimSun',serif;
     font-size: 12px;
     font-weight: 600;
     color: var(--text-dim);
@@ -440,7 +440,7 @@
 
 /* 表头 */
 .pp-header .pp-col {
-    font-family: 'Noto Serif SC', serif;
+    font-family: 'Source Han Serif SC','Noto Serif SC','PingFang SC','Songti SC','SimSun',serif;
     font-size: 14px;
     font-weight: 700;
     color: var(--gold);
@@ -451,7 +451,7 @@
 
 /* 十神行 */
 .pp-ss-row .pp-col {
-    font-family: 'Noto Serif SC', serif;
+    font-family: 'Source Han Serif SC','Noto Serif SC','PingFang SC','Songti SC','SimSun',serif;
     font-size: 13px;
     font-weight: 600;
     color: var(--text-secondary);
@@ -473,7 +473,7 @@
 }
 
 .tian-gan {
-    font-family: 'Noto Serif SC', serif;
+    font-family: 'Source Han Serif SC','Noto Serif SC','PingFang SC','Songti SC','SimSun',serif;
     font-size: 28px;
     font-weight: 900;
     color: var(--text-primary);
@@ -488,7 +488,7 @@
 
 /* 地支 - 与天干同字体同大小 */
 .di-zhi {
-    font-family: 'Noto Serif SC', serif;
+    font-family: 'Source Han Serif SC','Noto Serif SC','PingFang SC','Songti SC','SimSun',serif;
     font-size: 28px;
     font-weight: 900;
     color: var(--text-primary);
@@ -512,14 +512,14 @@
 }
 
 .cang-gan-char {
-    font-family: 'Noto Serif SC', serif;
+    font-family: 'Source Han Serif SC','Noto Serif SC','PingFang SC','Songti SC','SimSun',serif;
     font-size: 15px;
     font-weight: 700;
     line-height: 1.1;
 }
 
 .cang-ss-text {
-    font-family: 'Noto Serif SC', serif;
+    font-family: 'Source Han Serif SC','Noto Serif SC','PingFang SC','Songti SC','SimSun',serif;
     font-size: 8px;
     font-weight: 400;
     color: #b8a878;
@@ -530,7 +530,7 @@
 
 /* 神煞行 */
 .pp-shensha-row .pp-col {
-    font-family: 'Noto Serif SC', serif;
+    font-family: 'Source Han Serif SC','Noto Serif SC','PingFang SC','Songti SC','SimSun',serif;
     font-size: 12px;
     font-weight: 400;
     color: var(--text-secondary);
@@ -644,7 +644,7 @@
 }
 
 .ss-accordion-name {
-    font-family: 'Noto Serif SC', serif;
+    font-family: 'Source Han Serif SC','Noto Serif SC','PingFang SC','Songti SC','SimSun',serif;
     font-size: 15px;
     font-weight: 700;
     color: var(--text-primary);
@@ -704,7 +704,7 @@
     display: block;
     font-size: 13px;
     color: var(--text-primary);
-    font-family: 'Noto Serif SC', serif;
+    font-family: 'Source Han Serif SC','Noto Serif SC','PingFang SC','Songti SC','SimSun',serif;
     font-weight: 600;
     line-height: 1.4;
 }
@@ -730,10 +730,10 @@
     border-radius: 2px;
 }
 .cg-geyao-header { margin-bottom: 12px; display: flex; align-items: baseline; gap: 8px; }
-.cg-geyao-ming { font-size: 18px; font-weight: 700; color: var(--gold); letter-spacing: 2px; font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif; }
+.cg-geyao-ming { font-size: 18px; font-weight: 700; color: var(--gold); letter-spacing: 2px; font-family: 'STKaiti','KaiTi','FangSong','Source Han Serif SC',serif; }
 .cg-geyao-geju { font-size: 13px; color: var(--text-secondary); }
 .cg-geyao-duan {
-    font-family: 'Noto Serif SC', serif;
+    font-family: 'Source Han Serif SC','Noto Serif SC','PingFang SC','Songti SC','SimSun',serif;
     font-size: 15px;
     color: var(--text-primary);
     line-height: 2;
@@ -752,14 +752,14 @@
     padding: 6px 20px;
     border: 1px solid;
     border-radius: 2px;
-    font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+    font-family: 'STKaiti','KaiTi','FangSong','Source Han Serif SC',serif;
     font-size: 16px;
     font-weight: 700;
     letter-spacing: 3px;
 }
 
 .dt-shi {
-    font-family: 'Noto Serif SC', serif;
+    font-family: 'Source Han Serif SC','Noto Serif SC','PingFang SC','Songti SC','SimSun',serif;
     font-size: 20px;
     font-weight: 700;
     color: var(--gold);
@@ -804,7 +804,7 @@
 .dt-line:hover { border-left-color: var(--gold); background: rgba(212,175,55,0.05); }
 .dt-ju {
     flex-shrink: 0;
-    font-family: 'Noto Serif SC', serif;
+    font-family: 'Source Han Serif SC','Noto Serif SC','PingFang SC','Songti SC','SimSun',serif;
     font-size: 15px;
     font-weight: 700;
     color: var(--gold);
@@ -831,7 +831,7 @@
     letter-spacing: 2px;
 }
 .dt-yz-text {
-    font-family: 'Noto Serif SC', serif;
+    font-family: 'Source Han Serif SC','Noto Serif SC','PingFang SC','Songti SC','SimSun',serif;
     font-size: 13px;
     color: var(--text-primary);
     line-height: 1.9;
@@ -858,7 +858,7 @@
     border-radius: 2px;
 }
 .fq-pillar-gz {
-    font-family: 'Noto Serif SC', serif;
+    font-family: 'Source Han Serif SC','Noto Serif SC','PingFang SC','Songti SC','SimSun',serif;
     font-size: 26px;
     font-weight: 900;
     color: var(--text-primary);
@@ -877,7 +877,7 @@
 .fq-label { font-size: 12px; color: var(--text-secondary); letter-spacing: 1px; }
 .fq-cang { display: flex; align-items: center; gap: 4px; }
 .fq-cang-gan {
-    font-family: 'Noto Serif SC', serif;
+    font-family: 'Source Han Serif SC','Noto Serif SC','PingFang SC','Songti SC','SimSun',serif;
     font-size: 18px;
     font-weight: 700;
 }
@@ -926,7 +926,7 @@
     margin-bottom: 18px;
 }
 .sa-badge {
-    font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+    font-family: 'STKaiti','KaiTi','FangSong','Source Han Serif SC',serif;
     font-size: 22px;
     font-weight: 700;
     color: var(--gold);
@@ -1069,7 +1069,7 @@
 
 /* 分组标题 */
 .ss-group-header {
-    font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+    font-family: 'STKaiti','KaiTi','FangSong','Source Han Serif SC',serif;
     font-size: 13px;
     font-weight: 400;
     color: var(--gold);
@@ -1094,7 +1094,7 @@
     padding: 6px 22px;
     border: 1px solid;
     border-radius: 2px;
-    font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+    font-family: 'STKaiti','KaiTi','FangSong','Source Han Serif SC',serif;
     font-size: 17px;
     font-weight: 700;
     letter-spacing: 3px;
@@ -1255,7 +1255,7 @@
 
 .mp-couple { text-align: center; margin-bottom: 14px; }
 .mp-day-gz {
-    font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+    font-family: 'STKaiti','KaiTi','FangSong','Source Han Serif SC',serif;
     font-size: 28px; font-weight: 700; color: var(--gold);
     letter-spacing: 4px;
 }
@@ -1280,7 +1280,7 @@
 }
 .mp-age-badge {
     display: inline-block;
-    font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+    font-family: 'STKaiti','KaiTi','FangSong','Source Han Serif SC',serif;
     font-size: 20px; font-weight: 700; color: var(--gold);
     padding: 4px 14px; border: 1px solid rgba(212,175,55,0.2);
     border-radius: 2px; margin-bottom: 6px;
@@ -1334,11 +1334,11 @@
     margin-bottom: 10px; flex-wrap: wrap;
 }
 .ft-year-num {
-    font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+    font-family: 'STKaiti','KaiTi','FangSong','Source Han Serif SC',serif;
     font-size: 22px; font-weight: 900; color: var(--gold); letter-spacing: 1px;
 }
 .ft-year-gz {
-    font-family: 'Noto Serif SC', serif;
+    font-family: 'Source Han Serif SC','Noto Serif SC','PingFang SC','Songti SC','SimSun',serif;
     font-size: 17px; font-weight: 700; color: var(--text-primary); letter-spacing: 3px;
 }
 .ft-tag {
@@ -1389,7 +1389,7 @@
     padding: 8px 28px;
     border: 1px solid;
     border-radius: 2px;
-    font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+    font-family: 'STKaiti','KaiTi','FangSong','Source Han Serif SC',serif;
     font-size: 18px; font-weight: 700; letter-spacing: 4px;
 }
 
@@ -1543,7 +1543,7 @@
 }
 .ft-wx-id {
     font-size: 18px; color: #4fd490; font-weight: 700;
-    letter-spacing: 2px; font-family: 'Noto Sans SC', sans-serif;
+    letter-spacing: 2px; font-family: 'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Source Han Sans SC',sans-serif;
 }
 .ft-fb-hint { font-size: 12px; color: var(--gold); font-weight: 500; letter-spacing: 1px; }
 
@@ -1580,7 +1580,7 @@
 }
 
 .paywall-card-title {
-    font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+    font-family: 'STKaiti','KaiTi','FangSong','Source Han Serif SC',serif;
     font-size: 20px; color: var(--gold);
     letter-spacing: 4px; margin-bottom: 6px;
 }
@@ -1593,7 +1593,7 @@
 .paywall-price { margin-bottom: 14px; }
 
 .paywall-current {
-    font-family: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+    font-family: 'STKaiti','KaiTi','FangSong','Source Han Serif SC',serif;
     font-size: 24px; color: var(--gold); font-weight: 700;
     letter-spacing: 2px;
 }
@@ -1665,7 +1665,7 @@
 }
 .payqr-close:hover { color: var(--text-primary); }
 .payqr-title {
-    font-family: 'ZCOOL XiaoWei','Noto Serif SC',serif;
+    font-family: 'STKaiti','KaiTi','FangSong','Source Han Serif SC',serif;
     font-size: 20px; color: var(--gold);
     letter-spacing: 3px; margin-bottom: 6px;
 }
