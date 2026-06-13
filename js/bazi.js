@@ -1843,89 +1843,269 @@ function calculateSpouseAge(bazi, peiSS) {
     };
 }
 
-// ==================== 父母关系分析 ====================
+// ==================== 父母关系分析（强化版） ====================
 function analyzeParents(bazi, gender) {
     const DAY = bazi.day.gan;
+    const DAY_WX = WU_XING[DAY];
     const isMale = gender === 'male';
 
-    // 父亲星
+    // === 0. 基础映射（内联，不依赖 hepan-core） ===
+    const ZHI_CHONG = { '子':'午','午':'子','丑':'未','未':'丑','寅':'申','申':'寅','卯':'酉','酉':'卯','辰':'戌','戌':'辰','巳':'亥','亥':'巳' };
+    const ZHI_HAI = { '子':'未','未':'子','丑':'午','午':'丑','寅':'巳','巳':'寅','卯':'辰','辰':'卯','申':'亥','亥':'申','酉':'戌','戌':'酉' };
+    const ZHI_HE = { '子丑':1,'寅亥':1,'卯戌':1,'辰酉':1,'巳申':1,'午未':1,'子丑':1,'丑子':1,'亥寅':1,'戌卯':1,'酉辰':1,'申巳':1,'未午':1 };
+    const YANG_REN_SET = { '丙午':1,'壬子':1,'丁巳':1,'癸亥':1 };
+    const WX_LIST = ['木','火','土','金','水'];
+    var WX_SI = {}, WX_SK = {};
+    WX_LIST.forEach(function(w,i){ WX_SI[w]=WX_LIST[(i+4)%5]; WX_SK[w]=WX_LIST[(i+2)%5]; });
+
+    // 十神→五行 辅助（根据十神名 + 日干五行推断该十神对应什么五行）
+    function ssToWx(ssName) {
+        if (!ssName) return null;
+        // 比肩/劫财 = 同日干五行
+        if (ssName === '比肩' || ssName === '劫财') return DAY_WX;
+        // 食神/伤官 = 我生者
+        if (ssName === '食神' || ssName === '伤官') return WX_LIST[(WX_LIST.indexOf(DAY_WX)+1)%5];
+        // 正财/偏财 = 我克者
+        if (ssName === '正财' || ssName === '偏财') return WX_LIST[(WX_LIST.indexOf(DAY_WX)+2)%5];
+        // 正官/七杀 = 克我者
+        if (ssName === '正官' || ssName === '七杀') return WX_LIST[(WX_LIST.indexOf(DAY_WX)+3)%5];
+        // 正印/偏印 = 生我者
+        if (ssName === '正印' || ssName === '偏印') return WX_LIST[(WX_LIST.indexOf(DAY_WX)+4)%5];
+        return null;
+    }
+
+    // 父亲星 / 母亲星
     const fatherStar = isMale ? '偏财' : '正财';
-    // 母亲星
     const motherStar = isMale ? '正印' : '偏印';
 
-    // 在年月柱中寻找父星和母星
-    let fatherPos = [], motherPos = [];
-    let fatherGan = null, motherGan = null;
-    const posName = { year: '年', month: '月' };
+    // === 1. 日主强弱粗略评估 (0-100) ===
+    function estimateDayPower() {
+        var s = 0;
+        // 月令权重最大
+        var mwx = DI_ZHI_WU_XING[bazi.month.zhi];
+        if (mwx === DAY_WX) s += 30;
+        else if (WX_SI[DAY_WX] === mwx) s += 22; // 月令生我
+        else if (WX_SK[DAY_WX] === mwx) s -= 15; // 月令克我
+        else if (DAY_WX === WX_SK[mwx]) s += 8;  // 我克月令
 
-    ['year','month'].forEach(pos => {
-        const ganSS = getShiShen(DAY, bazi[pos].gan);
-        if (ganSS === fatherStar) { fatherPos.push(posName[pos] + '干'); fatherGan = bazi[pos].gan; }
-        if (ganSS === motherStar) { motherPos.push(posName[pos] + '干'); motherGan = bazi[pos].gan; }
+        // 各柱天干
+        ['year','month','day','hour'].forEach(function(pos){
+            var gan = bazi[pos].gan;
+            var gwx = WU_XING[gan];
+            if (gwx === DAY_WX) s += 8;
+            else if (WX_SI[DAY_WX] === gwx) s += 6;
+            else if (WX_SK[DAY_WX] === gwx) s -= 5;
+        });
+        // 各柱地支+藏干
+        ['year','month','day','hour'].forEach(function(pos){
+            var zhi = bazi[pos].zhi;
+            var zwx = DI_ZHI_WU_XING[zhi];
+            if (zwx === DAY_WX) s += 4;
+            else if (WX_SI[DAY_WX] === zwx) s += 3;
+            else if (WX_SK[DAY_WX] === zwx) s -= 3;
+            var cg = getCangGan(zhi);
+            cg.forEach(function(g){
+                var cwx = WU_XING[g];
+                if (cwx === DAY_WX) s += 2;
+                else if (WX_SI[DAY_WX] === cwx) s += 2;
+            });
+        });
+        return Math.max(0, Math.min(100, s + 40));
+    }
+    var dayPower = estimateDayPower();
+    var dmLabel = dayPower >= 60 ? '偏强' : (dayPower >= 40 ? '中和' : '偏弱');
 
-        const cg = getCangGan(bazi[pos].zhi);
-        cg.forEach(g => {
-            const ss = getShiShen(DAY, g);
-            if (ss === fatherStar) { fatherPos.push(posName[pos] + '支'); }
-            if (ss === motherStar) { motherPos.push(posName[pos] + '支'); }
+    // 判断某十神对日主来说是否"喜用"
+    function isXiShen(ssName) {
+        var wax = ssToWx(ssName);
+        if (!wax) return false;
+        if (dmLabel === '偏强') {
+            // 身强喜克泄耗：官杀、食伤、财星
+            return ssName === '正官' || ssName === '七杀' || ssName === '食神' || ssName === '伤官' || ssName === '正财' || ssName === '偏财';
+        } else {
+            // 身弱喜生扶：印星、比劫
+            return ssName === '正印' || ssName === '偏印' || ssName === '比肩' || ssName === '劫财';
+        }
+    }
+
+    // === 2. 查找父母星位置 ===
+    var fatherPos = [], motherPos = [];
+    var fatherGan = null, motherGan = null, fatherShiShenOnGan = null, motherShiShenOnGan = null;
+    var fatherInYear = false, motherInYear = false;
+    var posNameMap = { year: '年', month: '月' };
+
+    ['year','month'].forEach(function(pos) {
+        var ganSS = getShiShen(DAY, bazi[pos].gan);
+        if (ganSS === fatherStar) { fatherPos.push(posNameMap[pos] + '干'); fatherGan = bazi[pos].gan; fatherShiShenOnGan = ganSS; if (pos==='year') fatherInYear = true; }
+        if (ganSS === motherStar) { motherPos.push(posNameMap[pos] + '干'); motherGan = bazi[pos].gan; motherShiShenOnGan = ganSS; if (pos==='year') motherInYear = true; }
+
+        var cg = getCangGan(bazi[pos].zhi);
+        cg.forEach(function(g) {
+            var ss = getShiShen(DAY, g);
+            if (ss === fatherStar) { fatherPos.push(posNameMap[pos] + '支'); if (pos==='year') fatherInYear = true; }
+            if (ss === motherStar) { motherPos.push(posNameMap[pos] + '支'); if (pos==='year') motherInYear = true; }
         });
     });
 
-    // 父母关系综合分析
-    let fatherText = '', motherText = '', summaryText = '';
+    // === 3. 父母星是否有根（同五行在其他柱出现） ===
+    function hasWuxingRoot(wx) {
+        var count = 0;
+        ['year','month','day','hour'].forEach(function(pos){
+            if (WU_XING[bazi[pos].gan] === wx) count++;
+            if (DI_ZHI_WU_XING[bazi[pos].zhi] === wx) count++;
+            getCangGan(bazi[pos].zhi).forEach(function(g){ if (WU_XING[g] === wx) count++; });
+        });
+        return count >= 2; // 至少出现 2 次才算有根
+    }
+    var fatherWx = ssToWx(fatherStar);
+    var motherWx = ssToWx(motherStar);
+    var fatherHasRoot = fatherWx ? hasWuxingRoot(fatherWx) : false;
+    var motherHasRoot = motherWx ? hasWuxingRoot(motherWx) : false;
 
-    // 父亲
+    // === 4. 年柱是否被冲/害/刑（父母宫受损） ===
+    var yearZhi = bazi.year.zhi;
+    var yearGan = bazi.year.gan;
+    var yearClash = [], yearHarm = [], yearPenalty = [];
+    var yearSS = getShiShen(DAY, yearGan);
+
+    ['month','day','hour'].forEach(function(pos){
+        var pz = bazi[pos].zhi;
+        if (ZHI_CHONG[yearZhi] === pz) yearClash.push(pos);
+        if (ZHI_HAI[yearZhi] === pz) yearHarm.push(pos);
+    });
+    // 刑
+    var xingMap = { '子':['卯'], '卯':['子'], '寅':['巳','申'], '巳':['寅','申'], '申':['寅','巳'], '丑':['戌','未'], '戌':['丑','未'], '未':['丑','戌'], '辰':['辰'], '午':['午'], '酉':['酉'], '亥':['亥'] };
+    ['month','day','hour'].forEach(function(pos){
+        var pz = bazi[pos].zhi;
+        if (xingMap[yearZhi] && xingMap[yearZhi].indexOf(pz) > -1) yearPenalty.push(pos);
+    });
+
+    var yearDamaged = yearClash.length + yearHarm.length + yearPenalty.length;
+    var yearZhiIsYangRen = YANG_REN_SET[yearGan + yearZhi];
+
+    // === 5. 生成文本 ===
+    var fatherText = '', motherText = '', summaryText = '', yearNote = '';
+    var posName = { year: '年柱', month: '月柱' };
+
+    // ---- 父亲 ----
+    var fIsXi = isXiShen(fatherStar);
     if (fatherPos.length > 0) {
-        fatherText = '父亲星（' + fatherStar + '）出现在' + fatherPos.join('、') + '位置，';
-        if (fatherPos.some(p => p.startsWith('年'))) {
-            fatherText += '父星得位，父亲对你人生影响深远，幼年能得到父亲较多的关怀和支持。';
-        } else if (fatherPos.some(p => p.startsWith('月'))) {
-            fatherText += '父亲在生活中扮演重要角色，可能在学业、事业发展方面给予你较多的引导。';
+        var fPositions = fatherPos.join('、');
+        fatherText = '父亲星（' + fatherStar + '）出现在' + fPositions;
+        if (fatherInYear) fatherText += '，得位年柱父母宫';
+
+        // 有根
+        if (!fatherHasRoot) {
+            fatherText += '。但父星根基较浅——在全局中只有孤星没有同五行支撑，意味着父亲可能在你的成长中很用心，但能给的实质资源或助力有限';
+        } else {
+            fatherText += '。父星根基扎实，意味着父亲自身能力或资源较充足，对你的人生有实质性帮助';
         }
-        // 年柱判断父亲是否被冲克
-        if (bazi.year.gan === fatherGan) {
-            // check if father gan is clashed
-            const keMap = { '甲':'庚','乙':'辛','丙':'壬','丁':'癸','戊':'甲','己':'乙','庚':'丙','辛':'丁','壬':'戊','癸':'己' };
-            const chongMap = { '子午':true,'丑未':true,'寅申':true,'卯酉':true,'辰戌':true,'巳亥':true };
-            const keGan = keMap[fatherGan];
-            // check if keGan appears in month pillar
-            const monthGan = bazi.month.gan;
-            if (monthGan === keGan) {
-                fatherText += ' 但父星可能被月干' + keGan + '克制，需注意父亲身体健康或父子沟通。';
+
+        // 喜用还是压力
+        if (fIsXi) {
+            fatherText += '。从命局看，父亲特质恰好是你所需要的，他对你的教导和要求大多对你有益，属于「严是爱」的类型';
+        } else {
+            fatherText += '。不过要注意，你命局日主' + dmLabel + '，父星对你的要求有时候会超出你的承受范围，需要学会把父亲的期望转化成动力而不是压力';
+        }
+
+        // 父星是否被克
+        if (fatherGan) {
+            var keMap = {};
+            ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'].forEach(function(g,i){
+                keMap[g] = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'][(i+7)%10]; // 间隔7位为克
+            });
+            var keGan = keMap[fatherGan];
+            if (bazi.month.gan === keGan) {
+                fatherText += '。特别提醒：父星在年干被月干' + keGan + '克制，需多留意父亲的身体健康，尤其在父亲年长之后';
             }
         }
     } else {
-        fatherText = '父亲星（' + fatherStar + '）未显于命局，父亲对你人生影响相对间接，或与父亲缘分较浅。可通过后天努力增进父子关系。';
+        if (fatherWx && hasWuxingRoot(fatherWx)) {
+            fatherText = '父亲星（' + fatherStar + '）虽未直接显现在年、月柱的天干地支上，但命局中' + fatherWx + '元素较旺，父缘并不浅——父亲对你的影响可能是间接的、潜移默化的方式存在，或者通过家中的其他长辈传递给你。';
+        } else {
+            fatherText = '父亲星（' + fatherStar + '）未显于命局，且相关五行也较弱，与父亲的缘分相对较浅。这并不代表关系不好，而是父亲在你性格形成期可能不在身边，或者有祖辈、师长在你人生中扮演了部分「父亲」角色。';
+        }
     }
 
-    // 母亲
+    // ---- 母亲 ----
+    var mIsXi = isXiShen(motherStar);
     if (motherPos.length > 0) {
-        motherText = '母亲星（' + motherStar + '）出现在' + motherPos.join('、') + '位置，';
-        if (motherPos.some(p => p.startsWith('年'))) {
-            motherText += '母星得位，从小受到母亲悉心照料，母子/母女感情深厚，母亲是你重要的精神支柱。';
-        } else if (motherPos.some(p => p.startsWith('月'))) {
-            motherText += '母亲在你的成长过程中扮演关键角色，亲子关系较为紧密。';
+        var mPositions = motherPos.join('、');
+        motherText = '母亲星（' + motherStar + '）出现在' + mPositions;
+        if (motherInYear) motherText += '，得位年柱父母宫';
+
+        if (!motherHasRoot) {
+            motherText += '。母星根基较浅，母亲在自己的生活中可能有自己的难处或局限，能给你的资源不是最充裕的，但她在情感上的付出是真诚的';
+        } else {
+            motherText += '。母星根基扎实，母亲是很坚实的后盾，在你需要的时候总能提供情感和实际上的支持';
+        }
+
+        if (mIsXi) {
+            motherText += '。从命局看，母亲的包容和支持正是你最需要的东西，你们之间有一种天然的互相理解，这对你的性格形成很关键';
+        } else {
+            motherText += '。但需留意——你命局日主' + dmLabel + '，母亲的过度保护和关注有时候反而会让你觉得「喘不过气」来。学会对母亲说「我可以自己来」也是长大的一部分';
+        }
+
+        if (motherGan) {
+            var keMap2 = {};
+            ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'].forEach(function(g,i){
+                keMap2[g] = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'][(i+7)%10];
+            });
+            if (bazi.month.gan === keMap2[motherGan]) {
+                motherText += '。母星在年干受月干克制，平时应多关心母亲的身体和情绪';
+            }
         }
     } else {
-        motherText = '母亲星（' + motherStar + '）未显于命局，母亲对你人生影响相对间接，或与母亲缘分较浅。可通过后天努力增进母子关系。';
+        if (motherWx && hasWuxingRoot(motherWx)) {
+            motherText = '母亲星（' + motherStar + '）在年、月柱的天干地支上不直接显现，但命局中' + motherWx + '元素不算弱，说明母亲的能量是通过生活细节渗透给你的——可能她没有用你期待的方式关爱你，但她一直以自己的方式在。';
+        } else {
+            motherText = '母亲星（' + motherStar + '）不显于命局，与母亲的缘分偏淡。每个人的成长环境不同，有些人是从长辈或朋友那里学到温柔和关怀的，这不一定是遗憾';
+        }
     }
 
-    // 综合
-    if (fatherPos.length > 0 && motherPos.length > 0) {
-        summaryText = '命局中父母双星俱现，幼年家庭结构较为完整，父母对你的关爱和引导都比较到位。';
-    } else if (fatherPos.length > 0 || motherPos.length > 0) {
-        summaryText = '命局中一亲显现另一亲不显，可能一方对你影响更大，另一方的互动相对较少。这并不意味着关系不好，只是缘分深浅有差异。';
+    // ---- 年柱综合 ----
+    yearNote = '年柱' + yearGan + yearZhi + '代表父母宫和祖上根基。';
+    if (yearClash.length > 0) {
+        var cpNames = yearClash.map(function(p){return posName[p];});
+        yearNote += '父母宫被' + cpNames.join('、') + '冲克，意味着家庭根基在某个阶段经历过动荡——可能是搬家、父母工作变动、或祖辈健康问题。但这反而培养了你更强的适应能力。';
+    } else if (yearHarm.length > 0) {
+        yearNote += '父母宫有暗害，家庭中可能有一些不为人道的矛盾或摩擦，这些事不会大爆发但会在你心里留下印记。';
+    } else if (yearPenalty.length > 0) {
+        yearNote += '父母宫有相刑，家庭关系中可能有一些微妙的张力需要时间去消化。';
     } else {
-        summaryText = '父母双星均不显于命局，可能早年与父母缘分较浅，或成长过程中受外界（如祖辈、师长）影响更多。这种情况下，后天有意识地经营家庭关系尤为重要。';
+        var yearHe = false;
+        ['month','day','hour'].forEach(function(pos){
+            var pair1 = yearZhi + bazi[pos].zhi, pair2 = bazi[pos].zhi + yearZhi;
+            if (ZHI_HE[pair1] || ZHI_HE[pair2]) yearHe = true;
+        });
+        if (yearHe) yearNote += '父母宫与其他柱相合，家庭关系比较融洽，长辈之间能相互支持。';
+        else yearNote += '父母宫整体比较平稳，家庭给你的基础是好的。';
     }
 
-    // 年柱干支关系
-    const yearSS = getShiShen(DAY, bazi.year.gan);
-    const yearCG = getCangGan(bazi.year.zhi);
-    const yearMainSS = getShiShen(DAY, yearCG[0]);
-    let yearNote = '年柱' + bazi.year.gan + bazi.year.zhi;
-    if (fatherPos.some(p => p.startsWith('年')) && motherPos.some(p => p.startsWith('年'))) {
-        yearNote += ' 为父母齐聚之宫，家庭根基较为稳固。';
+    if (yearZhiIsYangRen) {
+        yearNote += ' 不过年柱为羊刃日柱，暗示父母中有一方性格比较刚烈或有主见，家里可能有一个「说了算」的人。';
+    }
+
+    // 判断生我者是否在地支有根（印星=母亲类象）
+    var yinWx = WX_LIST[(WX_LIST.indexOf(DAY_WX)+4)%5];
+    var yinInYr = DI_ZHI_WU_XING[yearZhi] === yinWx;
+    if (yinInYr && !motherInYear) {
+        yearNote += ' 年支为' + yearZhi + '（属' + yinWx + '），是印星之根，母亲虽然不直接显现在天干上，但她的影响力在家庭根基中是实实在在的。';
+    }
+
+    // ---- 综合 ----
+    if (fatherPos.length > 0 && motherPos.length > 0) {
+        if (yearDamaged === 0 && fatherHasRoot && motherHasRoot) {
+            summaryText = '命局中父母双星俱现且根基牢固，父母宫也没什么损伤。幼年家庭结构完整，父母双方对你的成长都给予了足够的关注和支持。日主' + dmLabel + '，总体上家庭环境是你性格形成中比较正面的力量。';
+        } else if (yearDamaged > 0) {
+            summaryText = '父母双星均在命局中出现，但父母宫存在' + (yearClash.length?'冲':'') + (yearHarm.length?'害':'') + (yearPenalty.length?'刑':'') + '的干扰。这意味着虽然父母都在身边，但家庭中并非一帆风顺——可能经历过一些波折或分歧。这些经历反而让你更早地学会了独立思考和适应变化。';
+        } else {
+            summaryText = '父母双星俱在，但一方根基偏弱。总体而言家庭给你的支持是中上的，你从父母那里学到的东西会在成年后慢慢体现出来。';
+        }
+    } else if (fatherPos.length > 0 || motherPos.length > 0) {
+        summaryText = '命局中一方亲星显现、另一方不显，暗示父母对你影响的权重不同。日主' + dmLabel + '的格局下，显性的那一方在你成长中起了更大的作用，而另一方可能因为性格、工作等原因互动较少。这不是关系好不好的问题，只是亲疏深浅的差别。';
+    } else {
+        summaryText = '父母双星均不直接显现在年月柱上，命局日主' + dmLabel + '。这意味着你性格形成期受外界（祖辈、师长、朋友）的影响可能超过父母。这种格局的人往往独立得比较早，成年后回头看，父母虽然没有时时刻刻在你身边，但给了你独自面对世界的底气和韧性。';
     }
 
     return {
