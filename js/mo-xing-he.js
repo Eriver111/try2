@@ -60,7 +60,7 @@ var MoXingHe = (function(){
   FloatingText.prototype.draw=function(){
     ctx.save();
     ctx.globalAlpha=this.alpha;
-    ctx.font='normal '+this.fontSize+'px "Noto Serif SC","KaiTi","SimSun",serif';
+    ctx.font='normal '+this.fontSize+'px "Source Han Serif SC","STKaiti","KaiTi","FangSong",serif';
     ctx.fillStyle='#dac878';ctx.shadowColor='rgba(218,200,120,.15)';ctx.shadowBlur=4;
     ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText(this.text,this.x*w,this.y*h);
