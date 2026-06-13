@@ -32,6 +32,20 @@
 .hero-scroll-hint{position:absolute;bottom:28px;font-size:11px;color:rgba(180,170,150,.2);
   letter-spacing:4px;opacity:0;animation:heroReveal .8s ease-out 1s forwards}
 
+/* === 古籍滚动条 === */
+.book-scroll-wrap{margin-top:36px;width:100%;overflow:hidden;position:relative;
+  background:rgba(255,255,255,.015);border-top:1px solid rgba(201,168,76,.12);
+  border-bottom:1px solid rgba(201,168,76,.12);padding:14px 0}
+.book-scroll-wrap::before,.book-scroll-wrap::after{
+  content:'';position:absolute;top:0;width:52px;height:100%;z-index:2;pointer-events:none}
+.book-scroll-wrap::before{left:0;background:linear-gradient(90deg,rgba(10,10,15,.95),transparent)}
+.book-scroll-wrap::after{right:0;background:linear-gradient(270deg,rgba(10,10,15,.95),transparent)}
+.book-scroll-track{display:flex;white-space:nowrap;animation:scrollBooks 60s linear infinite}
+.book-scroll-inner{display:inline-flex;gap:0;font-size:13px;color:#c9a84c;font-weight:600;
+  letter-spacing:3px;padding-right:48px;
+  text-shadow:0 0 8px rgba(201,168,76,.35),0 0 20px rgba(201,168,76,.12)}
+@keyframes scrollBooks{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
 /* ============ FEATURES ============ */
 .features{display:flex;flex-direction:column;gap:16px;margin:20px 0 60px}
 .feat-card{padding:26px 22px;background:rgba(20,20,36,.5);
@@ -76,10 +90,14 @@
 /* ============ Mobile ============ */
 @media(max-width:400px){
   .landing-wrap{padding:0 14px 48px}
+  .hero{min-height:90vh;padding:40px 0 20px;justify-content:center}
   .hero h1{font-size:48px;letter-spacing:24px}
   .hero-tagline{font-size:14px;letter-spacing:12px}
   .hero-desc{font-size:12px;letter-spacing:1px}
   .hero-cta{padding:14px 36px;font-size:15px}
+  .hero-scroll-hint{bottom:16px}
+  .book-scroll-wrap{margin-top:24px}
+  .book-scroll-inner{font-size:10px}
   .features{gap:12px}
   .feat-card{padding:20px 16px}
   .cta-bottom{padding:32px 14px}
