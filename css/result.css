@@ -38,6 +38,7 @@
     text-shadow: 0 0 15px var(--gold-glow);
     margin-bottom: 12px;
 }
+.result-title a{color:inherit;text-decoration:none}
 
 .birth-info {
     font-size: 14px;
