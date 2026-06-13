@@ -65,7 +65,7 @@ function showPaywall() {
       +   '<div class="paywall-card-sub">以下内容需付费解锁后查看</div>'
       +   '<div class="paywall-price" style="margin-top:18px;margin-bottom:14px">'
       +     '<span class="paywall-current">9.9 元</span>'
-      +     '<span class="paywall-one-time" style="display:block;font-size:10px;color:var(--text-dim);margin-top:2px">一次付费，全部板块永久解锁（7天内）</span>'
+      +     '<span class="paywall-one-time" style="display:block;font-size:10px;color:var(--text-dim);margin-top:2px">付费后即可下载完整报告，随时查看</span>'
       +   '</div>'
       +   '<button class="paywall-btn" onclick="startPay()">解锁全部内容</button>'
       +   '<button class="paywall-btn-check" id="checkBtnManual" onclick="checkPaymentManually()" style="display:none;margin-top:14px">我已付过款，刷新状态</button>'
@@ -161,11 +161,9 @@ function onPaymentSuccess(token) {
   if (typeof renderPaidContent === 'function') {
     renderPaidContent();
   }
-  // 下载/PDF按钮
-  var db = document.getElementById('downloadBtn');
-  if (db) db.style.display = '';
-  var pb = document.getElementById('printBtn');
-  if (pb) pb.style.display = '';
+  // 显示下载横幅
+  var banner = document.getElementById('downloadBanner');
+  if (banner) banner.style.display = '';
 }
 
 // ---- 二维码弹窗 ----
@@ -248,10 +246,8 @@ function verifyAndUnlock(token) {
     if (data.valid) {
       hidePaywall();
       if (typeof renderPaidContent === 'function') renderPaidContent();
-      var db = document.getElementById('downloadBtn');
-      if (db) db.style.display = '';
-      var pb = document.getElementById('printBtn');
-      if (pb) pb.style.display = '';
+      var banner = document.getElementById('downloadBanner');
+      if (banner) banner.style.display = '';
     } else {
       clearSaved();
       showPaywall();
