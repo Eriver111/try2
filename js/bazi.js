@@ -1843,6 +1843,82 @@ function calculateSpouseAge(bazi, peiSS) {
     };
 }
 
+// ==================== 日主强弱判定（子平法标准：得令·得地·得势） ====================
+/**
+ * 子平法日主旺衰分析。
+ * 三步判定：①得令（月令是否生扶）→ ②得地（地支通根）→ ③得势（天干比劫印星多寡）
+ *
+ * 五行流转: 木→火→土→金→水→木
+ *   同我(比劫)  = index+0   我生(食伤/泄) = index+1
+ *   我克(财/耗) = index+2   克我(官杀/克)   = index+3
+ *   生我(印/助) = index+4  (等价于 index-1)
+ *
+ * @param {Object} bazi - { year:{gan,zhi}, month:{gan,zhi}, day:{gan,zhi}, hour:{gan,zhi} }
+ * @returns {{ level:string, label:string, score:number }}
+ */
+function calcDayMasterStrength(bazi) {
+  var dg = bazi.day.gan;
+  var dgWx = WU_XING[dg];
+  var WXL = ['木','火','土','金','水'];
+  var di = WXL.indexOf(dgWx);
+
+  // 五行关系映射: key = 日主五行, value = 目标五行
+  // SHENGWO = "生我" (印), WOSHENG = "我生" (食伤), KEWO = "克我" (官杀), WOKE = "我克" (财)
+  var SHENGWO = {}, WOSHENG = {}, KEWO = {}, WOKE = {};
+  WXL.forEach(function(w, i) {
+    SHENGWO[w] = WXL[(i + 4) % 5]; // 生我
+    WOSHENG[w] = WXL[(i + 1) % 5]; // 我生
+    KEWO[w]   = WXL[(i + 3) % 5]; // 克我
+    WOKE[w]   = WXL[(i + 2) % 5]; // 我克
+  });
+
+  var score = 50; // 基准分
+
+  // ---------- ① 得令：月令地支本气与日主关系 (权重最大) ----------
+  var mwx = DI_ZHI_WU_XING[bazi.month.zhi];
+  if (mwx === dgWx)            score += 30; // 得令 — 月令与日主同五行
+  else if (SHENGWO[dgWx] === mwx) score += 20; // 相令 — 月令生我
+  else if (WOSHENG[dgWx] === mwx) score -= 15; // 休令 — 我生月令（泄气）
+  else if (WOKE[dgWx] === mwx)   score -= 10; // 囚令 — 我克月令（耗力）
+  else if (KEWO[dgWx] === mwx)   score -= 25; // 死令 — 月令克我（最不利）
+
+  // ---------- ② 得地：日支是否通根 ----------
+  var dayZhiWx = DI_ZHI_WU_XING[bazi.day.zhi];
+  if (dayZhiWx === dgWx)          score += 12; // 日支同五行（自坐强根）
+  else if (SHENGWO[dgWx] === dayZhiWx) score += 8;  // 日支生日主
+  else if (KEWO[dgWx] === dayZhiWx)   score -= 10; // 日支克日主
+
+  // ---------- ③ 得势：各柱天干比劫/印星 vs 克泄耗 ----------
+  ['year','month','day','hour'].forEach(function(pos) {
+    var gwx = WU_XING[bazi[pos].gan];
+    if (gwx === dgWx)            score += 6;  // 比肩劫财
+    else if (SHENGWO[dgWx] === gwx) score += 4;  // 印星
+    else if (KEWO[dgWx] === gwx)   score -= 4;  // 官杀
+    else if (WOSHENG[dgWx] === gwx) score -= 3;  // 食伤（泄）
+    else if (WOKE[dgWx] === gwx)   score -= 5;  // 财星（耗）
+  });
+
+  // ---------- ④ 地支藏干辅助 ----------
+  ['year','month','day','hour'].forEach(function(pos) {
+    var cg = getCangGan(bazi[pos].zhi);
+    cg.forEach(function(g) {
+      var gwx = WU_XING[g];
+      if (gwx === dgWx)            score += 3; // 藏干比肩
+      else if (SHENGWO[dgWx] === gwx) score += 2; // 藏干印星
+    });
+  });
+
+  // ---------- ⑤ 分级输出 ----------
+  var level, label;
+  if (score >= 85)      { level = '极强'; label = '元气充沛'; }
+  else if (score >= 65) { level = '偏强'; label = '元气较足'; }
+  else if (score >= 45) { level = '中和'; label = '元气均衡'; }
+  else if (score >= 35) { level = '偏弱'; label = '元气偏柔'; }
+  else                  { level = '极弱'; label = '元气清秀'; }
+
+  return { level: level, label: label, score: score };
+}
+
 // ==================== 父母关系分析（强化版） ====================
 function analyzeParents(bazi, gender) {
     const DAY = bazi.day.gan;
@@ -1878,54 +1954,22 @@ function analyzeParents(bazi, gender) {
     const fatherStar = isMale ? '偏财' : '正财';
     const motherStar = isMale ? '正印' : '偏印';
 
-    // === 1. 日主强弱粗略评估 (0-100) ===
-    function estimateDayPower() {
-        var s = 0;
-        // 月令权重最大
-        var mwx = DI_ZHI_WU_XING[bazi.month.zhi];
-        if (mwx === DAY_WX) s += 30;
-        else if (WX_SI[DAY_WX] === mwx) s += 22; // 月令生我
-        else if (WX_SK[DAY_WX] === mwx) s -= 15; // 月令克我
-        else if (DAY_WX === WX_SK[mwx]) s += 8;  // 我克月令
-
-        // 各柱天干
-        ['year','month','day','hour'].forEach(function(pos){
-            var gan = bazi[pos].gan;
-            var gwx = WU_XING[gan];
-            if (gwx === DAY_WX) s += 8;
-            else if (WX_SI[DAY_WX] === gwx) s += 6;
-            else if (WX_SK[DAY_WX] === gwx) s -= 5;
-        });
-        // 各柱地支+藏干
-        ['year','month','day','hour'].forEach(function(pos){
-            var zhi = bazi[pos].zhi;
-            var zwx = DI_ZHI_WU_XING[zhi];
-            if (zwx === DAY_WX) s += 4;
-            else if (WX_SI[DAY_WX] === zwx) s += 3;
-            else if (WX_SK[DAY_WX] === zwx) s -= 3;
-            var cg = getCangGan(zhi);
-            cg.forEach(function(g){
-                var cwx = WU_XING[g];
-                if (cwx === DAY_WX) s += 2;
-                else if (WX_SI[DAY_WX] === cwx) s += 2;
-            });
-        });
-        return Math.max(0, Math.min(100, s + 40));
-    }
-    var dayPower = estimateDayPower();
-    var dmLabel = dayPower >= 60 ? '偏强' : (dayPower >= 40 ? '中和' : '偏弱');
+    // === 1. 日主强弱判定（子平法：得令·得地·得势） ===
+    var dmResult = calcDayMasterStrength(bazi);
+    var dmLabel = dmResult.level;
+    var dmScore = dmResult.score;
 
     // 判断某十神对日主来说是否"喜用"
     function isXiShen(ssName) {
         var wax = ssToWx(ssName);
         if (!wax) return false;
-        if (dmLabel === '偏强') {
-            // 身强喜克泄耗：官杀、食伤、财星
+        if (dmLabel === '偏强' || dmLabel === '极强') {
             return ssName === '正官' || ssName === '七杀' || ssName === '食神' || ssName === '伤官' || ssName === '正财' || ssName === '偏财';
-        } else {
-            // 身弱喜生扶：印星、比劫
+        } else if (dmLabel === '偏弱' || dmLabel === '极弱') {
             return ssName === '正印' || ssName === '偏印' || ssName === '比肩' || ssName === '劫财';
         }
+        // 中和：无明显喜忌
+        return false;
     }
 
     // === 2. 查找父母星位置 ===
@@ -3006,6 +3050,7 @@ window.BaZiCalculator = {
     analyzePei: analyzePei,
     calculateSpouseAge: calculateSpouseAge,
     analyzeParents: analyzeParents,
+    calcDayMasterStrength: calcDayMasterStrength,
     analyzeCharacter: analyzeCharacter,
     analyzeWealth: analyzeWealth,
     analyzeFortune: analyzeFortune,
