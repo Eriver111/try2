@@ -145,14 +145,15 @@ var MoXingHe = (function(){
     raf=requestAnimationFrame(loop);
   }
 
-  function init(canvasId){
+  function init(canvasId, showTexts){
+    showTexts = showTexts !== false; // 默认 true，只传 false 才关闭
     canvas=document.getElementById(canvasId);if(!canvas)return;
     ctx=canvas.getContext('2d');resize();window.addEventListener('resize',resize);
     clouds=[];stars=[];inkStrokes=[];floatingTexts=[];
     for(var i=0;i<8;i++)clouds.push(new Cloud());
     for(var i=0;i<120;i++)stars.push(new Star());
     for(var i=0;i<4;i++)inkStrokes.push(new InkStroke());
-    for(var i=0;i<18;i++)floatingTexts.push(new FloatingText());
+    if(showTexts) for(var i=0;i<18;i++)floatingTexts.push(new FloatingText());
     document.addEventListener('mousemove',function(e){pointer.tx=e.clientX/w;pointer.ty=e.clientY/h;});
     document.addEventListener('touchmove',function(e){pointer.tx=e.touches[0].clientX/w;pointer.ty=e.touches[0].clientY/h;},{passive:true});
     running=true;requestAnimationFrame(loop);
