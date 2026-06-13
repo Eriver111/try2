@@ -3,145 +3,123 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>知时 - 传统文化探索工具</title>
-<meta name="description" content="知时，传统文化探索工具。输入生日，获取你的性格倾向、人生节奏参考。仅供娱乐交流。">
+<title>知时 · 知天时 · 见自己</title>
+<meta name="description" content="知时，传承千年东方智慧。输入生辰，获得专属于你的命理分析报告。八字排盘、大运流年、性格解析，AI 参详，引经据典。">
 <link rel="stylesheet" href="css/style.css">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/landing.css">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 <script defer src="https://cloud.umami.is/script.js" data-website-id="YOUR_UMAMI_ID"></script>
 </head>
 <body>
-<div class="bg-layer"><canvas id="bgCanvas"></canvas><div class="bg-overlay"></div></div>
-<div class="ink-splash tl"></div>
-<div class="ink-splash br"></div>
+<canvas id="mxhCanvas"></canvas>
 
-<div class="app">
-  <!-- Header -->
-  <header class="header">
-    <div class="header-line"></div>
-    <h1><a href="landing.html">知 时</a></h1>
-    <p class="tagline">知天时 · 见自己</p>
-  </header>
-
-  <!-- Card -->
-  <div class="card">
-    <!-- Calendar Mode Tabs -->
-    <div class="mode-tabs">
-      <button class="mode-tab active" data-mode="solar" onclick="switchMode('solar')">公历</button>
-      <button class="mode-tab" data-mode="lunar" onclick="switchMode('lunar')">农历</button>
+<div class="landing-wrap">
+  <!-- ====== Hero ====== -->
+  <section class="hero">
+    <div class="hero-brand">
+      <div class="hero-line"></div>
+      <h1>知 时</h1>
+      <p class="hero-tagline">知天时 · 见自己</p>
     </div>
-
-    <form id="birthForm" novalidate>
-      <!-- Solar mode -->
-      <div class="mode-panel active" id="solarPanel">
-        <div class="row two">
-          <div class="field">
-            <label>年份</label>
-            <select id="sYear" required><option value="">选择年份</option></select>
-          </div>
-          <div class="field">
-            <label>月份</label>
-            <select id="sMonth" required><option value="">选择月份</option></select>
-          </div>
-        </div>
-        <div class="row two">
-          <div class="field">
-            <label>日期</label>
-            <select id="sDay" required><option value="">选择日期</option></select>
-          </div>
-          <div class="field">
-            <label>时辰（精确到点）</label>
-            <select id="sHour" required><option value="">选择时辰</option></select>
-          </div>
-        </div>
-        <div class="row">
-          <div class="field">
-            <label>精确分钟</label>
-            <input type="number" id="sMinute" min="0" max="59" placeholder="如 30" class="minute-inp">
-            <span class="minute-hint">用于真太阳时校正，可不填</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Lunar mode -->
-      <div class="mode-panel" id="lunarPanel">
-        <div class="row two">
-          <div class="field">
-            <label>农历年份</label>
-            <select id="lYear" required><option value="">选择年份</option></select>
-          </div>
-          <div class="field">
-            <label>农历月份</label>
-            <select id="lMonth" required><option value="">选择月份</option></select>
-          </div>
-        </div>
-        <div class="row two">
-          <div class="field">
-            <label>农历日期</label>
-            <select id="lDay" required><option value="">选择日期</option></select>
-          </div>
-          <div class="field">
-            <label>时辰（精确到点）</label>
-            <select id="lHour" required><option value="">选择时辰</option></select>
-          </div>
-        </div>
-        <div class="row">
-          <div class="field">
-            <label>精确分钟</label>
-            <input type="number" id="lMinute" min="0" max="59" placeholder="如 30" class="minute-inp">
-            <span class="minute-hint">用于真太阳时校正，可不填</span>
-          </div>
-        </div>
-        <div class="lunar-preview" id="lunarPreview"></div>
-      </div>
-
-      <!-- Gender -->
-      <div class="row">
-        <div class="field">
-          <label>性别</label>
-          <div class="radio-group">
-            <label class="radio"><input type="radio" name="gender" value="male" required> <span>乾造 · 男</span></label>
-            <label class="radio"><input type="radio" name="gender" value="female"> <span>坤造 · 女</span></label>
-          </div>
-        </div>
-      </div>
-
-      <!-- Location -->
-      <div class="row two">
-        <div class="field">
-          <label>出生地 · 省</label>
-          <select id="province" required><option value="">选择省份</option></select>
-        </div>
-        <div class="field">
-          <label>出生地 · 市</label>
-          <select id="city" required disabled><option value="">选择城市</option></select>
-        </div>
-      </div>
-      <div class="row">
-        <div class="field">
-          <label>出生地 · 区县</label>
-          <select id="district" required disabled><option value="">选择区县</option></select>
-        </div>
-      </div>
-
-      <button type="submit" class="submit">起盘推演</button>
-    </form>
-
-    <div class="trust">
-      <span>🔒 全程加密</span>
-      <span>☁️ 不留存数据</span>
-      <span>⚡ 秒出结果</span>
+    <p class="hero-desc">传承千年东方智慧，AI 参详引经据典<br>为你解读专属命盘，知命不认命</p>
+    <a href="paipan.html" class="hero-cta">免费起盘 ▸</a>
+    <div class="book-scroll-wrap">
+      <div class="book-scroll-track" id="bookTrack"></div>
     </div>
-  </div>
+    <div class="hero-scroll-hint">▼ 了解更多</div>
+  </section>
 
-  <footer class="footer">
+  <!-- ====== Features ====== -->
+  <section class="features">
+    <div class="feat-card">
+      <div class="feat-icon">📜</div>
+      <h3>八字排盘</h3>
+      <p>支持公历 / 农历双模式输入<br>精确到时辰分钟，真太阳时校正<br>纳音神煞，十神旺衰，一目了然</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🔮</div>
+      <h3>大运流年</h3>
+      <p>从 0 岁到末年，完整大运推演<br>近 5 年流年逐岁详参<br>五行力量均衡度量化对比</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🗂</div>
+      <h3>专题解读</h3>
+      <p>性格特质 · 事业财运 · 婚姻情感<br>健康提醒 · 父母关系 · 流年建议<br>六大维度，逐一展开深度分析</p>
+    </div>
+  </section>
+
+  <!-- ====== Trust ====== -->
+  <section class="trust-section">
+    <h2>为什么选择知时</h2>
+    <div class="trust-grid">
+      <div class="trust-item">
+        <div class="trust-num">01</div>
+        <div class="trust-body">
+          <h4>古法起盘 · 算法可验</h4>
+          <p>基于寿星万年历数据，1900-2100 年农历/公历互转经过严格往返验证。八字四柱 + 藏干 + 纳音 + 神煞 + 十神，古法全流程排盘，非黑箱输出。</p>
+        </div>
+      </div>
+      <div class="trust-item">
+        <div class="trust-num">02</div>
+        <div class="trust-body">
+          <h4>AI 参详 · 引经据典</h4>
+          <p>AI 分析引擎逐柱推演，融合《滴天髓》《三命通会》《子平真诠》等古典命理，输出通俗易懂的现代解读，不空谈、可溯源。</p>
+        </div>
+      </div>
+      <div class="trust-item">
+        <div class="trust-num">03</div>
+        <div class="trust-body">
+          <h4>隐私安全 · 数据加密</h4>
+          <p>全程 HTTPS 加密传输，报告生成后个人信息即时脱敏。不存盘、不追踪、不售卖。你的命运，只有你能看见。</p>
+        </div>
+      </div>
+      <div class="trust-item">
+        <div class="trust-num">04</div>
+        <div class="trust-body">
+          <h4>按次计费 · 无订阅</h4>
+          <p>解锁完整报告仅需一次付费，无月费、无自动续费。所见即所得，付多少得多少。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== CTA Bottom ====== -->
+  <section class="cta-bottom">
+    <h2>准备好了吗？</h2>
+    <p>输入你的生辰，看看千年前的东方智慧如何解读你的生命密码</p>
+    <a href="paipan.html" class="cta-btn">免费起盘 ▸</a>
+  </section>
+
+  <!-- ====== Footer ====== -->
+  <footer class="land-footer">
     <p>知天时，见自己 · 仅供娱乐交流</p>
     <p class="disc">※ 本站内容仅供学习参考与娱乐交流，不构成任何决策建议</p>
   </footer>
 </div>
 
-<script src="js/lunar.js"></script>
-<script src="js/region.js"></script>
-<script src="js/bg-animation.js"></script>
-<script src="js/main.js"></script>
+<script src="js/mo-xing-he.js"></script>
+<script>MoXingHe.start('mxhCanvas');
+
+// 古籍书名滚动
+(function(){
+  var books=[
+    '《滴天髓》','《三命通会》','《子平真诠》','《穷通宝鉴》','《渊海子平》',
+    '《周易》','《梅花易数》','《卜筮正宗》','《增删卜易》','《果老星宗》',
+    '《紫微斗数全书》','《六壬大全》','《奇门遁甲》','《烟波钓叟歌》',
+    '《神峰通考》','《星平会海》','《千里命稿》','《韦千里命理讲义》',
+    '《栏江网》','《命理探源》','《人鉴》','《造化玄钥》',
+    '《滴天髓》','《三命通会》','《子平真诠》','《穷通宝鉴》','《渊海子平》'
+  ];
+  var track=document.getElementById('bookTrack');
+  if(!track)return;
+  var el=document.createElement('span');
+  el.className='book-scroll-inner';
+  el.textContent=books.join(' · ');
+  track.appendChild(el);
+  var el2=document.createElement('span');
+  el2.className='book-scroll-inner';
+  el2.textContent=books.join(' · ');
+  track.appendChild(el2);
+})();</script>
 </body>
 </html>
