@@ -11,16 +11,17 @@
     <script defer src="https://cloud.umami.is/script.js" data-website-id="YOUR_UMAMI_ID"></script>
 </head>
 <body>
-    <div class="bg-layer">
+    <canvas id="mxhCanvas" style="position:fixed;inset:0;z-index:0;width:100%;height:100%"></canvas>
+    <div class="bg-layer" style="display:none">
         <canvas id="bgCanvas"></canvas>
         <div class="bg-overlay"></div>
     </div>
 
-    <div class="result-container">
+    <div class="result-container" style="position:relative;z-index:1">
         <!-- 顶部信息栏 -->
         <header class="result-header">
             <a href="index.html" class="back-link">← 重新分析</a>
-            <h1 class="result-title">知时</h1>
+            <h1 class="result-title"><a href="landing.html">知时</a></h1>
             <div class="birth-info">
                 <span id="genderLabel"></span>
                 <span class="info-sep">|</span>
@@ -34,9 +35,16 @@
                 真太阳时：<span id="solarTimeText"></span>
             </div>
             <button class="share-btn" onclick="shareResult()" title="复制分享链接">🔗 分享报告</button>
-            <button class="share-btn download-btn" id="downloadBtn" onclick="downloadReport()" style="display:none;background:rgba(212,175,55,0.15)" title="下载报告到本地">📥 下载报告</button>
-            <button class="share-btn download-btn" id="printBtn" onclick="openReportInNewTab()" style="display:none;background:rgba(100,180,140,0.12);border-color:rgba(100,180,140,.25);color:#a0d8b0" title="在新标签页打开，可保存为PDF">🖨 保存为 PDF</button>
         </header>
+
+        <!-- 付费后下载横幅 -->
+        <div class="download-banner" id="downloadBanner" style="display:none">
+            <div class="dl-banner-title">📋 你的专属分析报告</div>
+            <div class="dl-banner-btns">
+                <button class="dl-btn dl-btn-pdf" onclick="openReportInNewTab()">🖨 保存为 PDF</button>
+                <button class="dl-btn dl-btn-html" onclick="downloadReport()">📥 下载 HTML 报告</button>
+            </div>
+        </div>
 
         <!-- ==================== 大运流年区域 ==================== -->
         <section class="section-dayun">
@@ -261,11 +269,25 @@
             </div>
         </section>
 
-        <!-- 底部声明 -->
+        <!-- 底部声明 + 联系方式 -->
         <footer class="result-footer">
-            <p>※ 本分析报告仅供学习参考与娱乐交流，不构成任何决策建议</p>
-            <p class="contact-info">📱 有任何问题，请联系客服微信 vx：EriverLife</p>
-            <p class="feedback-link" onclick="showFeedback()">💬 帮助我们做得更好</p>
+            <div class="ft-disclaimer">※ 本分析报告仅供学习参考与娱乐交流，不构成任何决策建议</div>
+            <div class="ft-contact">
+                <div class="ft-wechat">
+                    <div class="ft-wx-icon">📱</div>
+                    <div class="ft-wx-text">
+                        <div class="ft-wx-label">联系客服微信</div>
+                        <div class="ft-wx-id">EriverLife</div>
+                    </div>
+                </div>
+                <div class="ft-feedback" onclick="showFeedback()">
+                    <div class="ft-fb-icon">💬</div>
+                    <div class="ft-fb-text">
+                        <div class="ft-fb-label">帮助我们做得更好</div>
+                        <div class="ft-fb-hint">你的建议和反馈</div>
+                    </div>
+                </div>
+            </div>
         </footer>
     </div>
 
@@ -283,10 +305,11 @@
     </div>
 
     <script src="js/bazi.js"></script>
-    <script src="js/bg-animation.js"></script>
+    <script src="js/mo-xing-he.js"></script>
     <script src="js/result.js"></script>
     <script src="js/paywall.js"></script>
     <script>
+        MoXingHe.start('mxhCanvas');
     function shareResult() {
         var btn = document.querySelector('.share-btn');
         var url = window.location.href;
