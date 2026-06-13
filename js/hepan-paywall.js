@@ -113,7 +113,7 @@ function startHePanPay() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      amount: 1390, // 13.9 元 = 1390 分
+      amount: 13.9,
       description: '知时合盘报告解锁',
       hash: _hepanHash
     })
