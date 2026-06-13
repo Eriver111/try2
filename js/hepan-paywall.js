@@ -106,8 +106,8 @@ function showHePanDownloadBtn() {
 function startHePanPay() {
   if (_hepanOrderId) return;
 
-  var btn = document.querySelector('.paywall-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '创建订单中...'; }
+  var allBtns = document.querySelectorAll('.paywall-btn');
+  allBtns.forEach(function(b) { b.disabled = true; b.textContent = '创建订单中...'; });
 
   fetch(HEPAN_API_BASE + '/create-order.js', {
     method: 'POST',
@@ -122,37 +122,39 @@ function startHePanPay() {
   .then(function(data) {
     if (data && data.orderId) {
       _hepanOrderId = data.orderId;
-      var qrEl = document.getElementById('hepanQRCode');
-      if (qrEl) {
-        qrEl.src = data.qrCode || '';
-        qrEl.style.display = 'block';
-      }
+      var qrSrc = data.qrcode || data.payUrl || '';
       var tip = document.getElementById('hepanPaywallTip');
-      if (tip) {
+      if (tip && qrSrc) {
         tip.style.display = 'block';
         tip.innerHTML = ''
           + '<div class="payqr-box" style="margin-top:16px;text-align:center">'
-          + (data.qrCode ? '<img src="' + data.qrCode + '" id="hepanQRCode" style="width:180px;height:180px;border-radius:12px;border:1px solid rgba(255,255,255,.08)" alt="微信扫码支付">' : '')
+          + '<img src="' + qrSrc + '" id="hepanQRCode" style="width:180px;height:180px;border-radius:12px;border:1px solid rgba(255,255,255,.08)" alt="扫码支付">'
           + '<div class="payqr-tip" style="margin-top:10px;font-size:12px;color:rgba(180,170,150,.5)">支付完成后将自动解锁全部内容</div>'
           + '</div>';
+      } else if (tip) {
+        tip.style.display = 'block';
+        tip.textContent = '订单已创建，请刷新页面查看' + (data.payUrl ? '：' + data.payUrl : '');
       }
       var checkBtn = document.getElementById('hepanCheckBtnManual');
       if (checkBtn) checkBtn.style.display = 'block';
 
-      if (btn) { btn.textContent = '请支付 13.9 元'; }
+      // 更新所有按钮文字
+      var allBtns = document.querySelectorAll('.paywall-btn');
+      allBtns.forEach(function(b) { b.textContent = '请支付 13.9 元'; });
       startHePanPolling();
     } else {
-      failHePanPay(btn, '创建订单失败，请稍后重试');
+      failHePanPay(data && data.error ? data.error : '创建订单失败，请稍后重试');
     }
   })
   .catch(function(e) {
     console.error('[hepan-pay] create-order failed', e);
-    failHePanPay(btn, '网络错误，请稍后重试');
+    failHePanPay('网络错误，请稍后重试');
   });
 }
 
-function failHePanPay(btn, msg) {
-  if (btn) { btn.disabled = false; btn.textContent = '解锁合盘报告'; }
+function failHePanPay(msg) {
+  var allBtns = document.querySelectorAll('.paywall-btn');
+  allBtns.forEach(function(b) { b.disabled = false; b.textContent = '解锁合盘报告'; });
   var tip = document.getElementById('hepanPaywallTip');
   if (tip) { tip.style.display = 'block'; tip.textContent = msg; }
 }
@@ -209,7 +211,7 @@ function verifyHePanAndUnlock(token) {
   fetch(HEPAN_API_BASE + '/verify-token.js', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token: token, hash: _hepanHash })
+    body: JSON.stringify({ token: token, baziHash: _hepanHash })
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
