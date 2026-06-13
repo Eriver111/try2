@@ -15,7 +15,7 @@
 .hero-brand{margin-bottom:28px;opacity:0;animation:heroReveal 1.2s ease-out forwards}
 @keyframes heroReveal{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
 .hero-line{width:72px;height:1px;background:linear-gradient(90deg,transparent,#c9a84c,transparent);margin:0 auto 28px}
-.hero h1{font-size:64px;font-weight:900;letter-spacing:32px;
+.hero h1{font-size:64px;font-weight:900;letter-spacing:32px;margin-left:32px;
   background:linear-gradient(180deg,#e8cf70,#c9a84c,#8a6d28);-webkit-background-clip:text;
   -webkit-text-fill-color:transparent;background-clip:text;
   filter:drop-shadow(0 0 40px rgba(201,168,76,.15));margin-bottom:16px}
@@ -91,7 +91,7 @@
 @media(max-width:400px){
   .landing-wrap{padding:0 14px 48px}
   .hero{min-height:90vh;padding:40px 0 20px;justify-content:center}
-  .hero h1{font-size:48px;letter-spacing:24px}
+  .hero h1{font-size:48px;letter-spacing:24px;margin-left:24px}
   .hero-tagline{font-size:14px;letter-spacing:12px}
   .hero-desc{font-size:12px;letter-spacing:1px}
   .hero-cta{padding:14px 36px;font-size:15px}
